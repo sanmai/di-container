@@ -42,12 +42,14 @@ use DIContainer\Container;
 use DIContainer\Exception;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Tests\DIContainer\Fixtures\ComplexDepender;
 use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
 use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
+use Tests\DIContainer\Fixtures\VariadicConstructor;
 
 #[CoversClass(Container::class)]
 class ContainerTest extends TestCase
@@ -123,5 +125,33 @@ class ContainerTest extends TestCase
         $container->get(NamedObjectInterface::class);
     }
 
+    public function testItThrowsOnClassesItCannotBuild(): void
+    {
+        $container = new Container();
 
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(ComplexObject::class);
+    }
+
+    public function testItThrowsOnClassesWithVariadicArguments(): void
+    {
+        $container = new Container();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(VariadicConstructor::class);
+    }
+
+    public function testItThrowsOnClassesWithCompositeArguments(): void
+    {
+        $container = new Container();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Composite types are not supported');
+
+        $container->get(ComplexDepender::class);
+    }
 }

@@ -50,7 +50,6 @@ use function is_a;
 use function Pipeline\take;
 use function reset;
 use function sprintf;
-use function gettype;
 
 /**
  * @final
