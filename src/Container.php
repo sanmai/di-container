@@ -48,8 +48,6 @@ use function count;
 use function get_class;
 use function is_a;
 use function is_callable;
-use function is_string;
-use function is_subclass_of;
 use function Pipeline\take;
 use function reset;
 use function sprintf;
@@ -65,9 +63,14 @@ class Container implements ContainerInterface
     private array $values = [];
 
     /**
-     * @var array<class-string<object>, callable|class-string<Builder<object>>>
+     * @var array<class-string<object>, callable>
      */
     private array $factories = [];
+
+    /**
+     * @var array<class-string<object>, class-string<Builder<object>>>
+     */
+    private array $builders = [];
 
     /**
      * @param array<class-string<object>, callable|class-string<Builder<object>>> $values
@@ -85,8 +88,14 @@ class Container implements ContainerInterface
      */
     private function offsetSet(string $id, callable|string $value): void
     {
-        $this->factories[$id] = $value;
         unset($this->values[$id]);
+
+        if (is_callable($value)) {
+            $this->factories[$id] = $value;
+            return;
+        }
+
+        $this->builders[$id] = $value;
     }
 
     /**
@@ -119,19 +128,16 @@ class Container implements ContainerInterface
         }
 
         if (
-            array_key_exists($id, $this->factories) &&
-            is_string($this->factories[$id]) &&
-            is_subclass_of($this->factories[$id], Builder::class)
+            array_key_exists($id, $this->builders)
         ) {
             /** @var Builder<T> $builder */
-            $builder = $this->get($this->factories[$id]);
+            $builder = $this->get($this->builders[$id]);
 
             return $this->setValueOrThrow($id, $builder->build());
         }
 
         if (
-            array_key_exists($id, $this->factories) &&
-            is_callable($this->factories[$id])
+            array_key_exists($id, $this->factories)
         ) {
             /** @var T $value */
             $value = $this->factories[$id]($this);
