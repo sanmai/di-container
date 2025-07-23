@@ -116,6 +116,7 @@ class Container implements ContainerInterface
         }
 
         if (array_key_exists($id, $this->factories)) {
+            /** @var T $value */
             $value = $this->factories[$id]($this);
 
             return $this->setValueOrThrow($id, $value);
@@ -165,7 +166,7 @@ class Container implements ContainerInterface
      * Builds a potentially incomplete list of arguments for a constructor; as list of arguments may
      * contain null values, we use a generator that can yield none or one value as an option type.
      *
-     * @return iterable<object>
+     * @return iterable<array-key, object>
      */
     private function resolveParameter(ReflectionParameter $parameter): iterable
     {
@@ -213,7 +214,7 @@ class Container implements ContainerInterface
      *
      * @template T of object
      * @param class-string<T> $type the class or interface name to find factories for
-     * @return class-string<T>[] a list of factory IDs (class-strings) that are compatible with the given type
+     * @return list<class-string<object>> a list of factory IDs (class-strings) that are compatible with the given type
      */
     private function factoriesForType(string $type): array
     {
