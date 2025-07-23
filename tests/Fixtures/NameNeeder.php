@@ -34,45 +34,14 @@
  *
  */
 
-declare(strict_types=1);
+namespace Tests\DIContainer\Fixtures;
 
-$header = file_get_contents(__DIR__ . '/LICENSE');
+class NameNeeder
+{
+    public function __construct(private readonly NamedObjectInterface $namedObject) {}
 
-$config = new PhpCsFixer\Config();
-$config
-    ->setRiskyAllowed(true)
-    ->setRules([
-        'header_comment' => ['comment_type' => 'PHPDoc', 'header' => $header, 'separate' => 'bottom', 'location' => 'after_open'],
-        '@PER-CS' => true,
-        '@PER-CS:risky' => true,
-
-        '@PHPUnit100Migration:risky' => true,
-        '@PHP74Migration' => true,
-        'no_unused_imports' => true,
-
-        'native_constant_invocation' => [
-            'strict' => false,
-            'scope' => 'namespaced',
-        ],
-        'native_function_invocation' => [
-            'include' => ['@internal'],
-            'scope' => 'namespaced',
-        ],
-        'global_namespace_import' => [
-            'import_classes' => true,
-            'import_constants' => true,
-            'import_functions' => true,
-        ],
-
-        'strict_comparison' => true,
-        'yoda_style' => true,
-        'array_indentation' => true,
-    ])
-    ->setFinder(
-        PhpCsFixer\Finder::create()
-            ->in(__DIR__)
-            ->append([__FILE__])
-    )
-;
-
-return $config;
+    public function getName(): string
+    {
+        return $this->namedObject->getName();
+    }
+}

@@ -11,8 +11,8 @@
     ],
     "require": {
         "php": ">=8.2",
-        "sanmai/pipeline": "^6.17 || ^7.0",
-        "psr/container": "^2.0"
+        "psr/container": "^2.0",
+        "sanmai/pipeline": "^6.17 || ^7.0"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.8",

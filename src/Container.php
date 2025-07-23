@@ -1,6 +1,8 @@
 <?php
+
 /**
  * Copyright (c) 2017, Maks Rafalko
+ * Copyright (c) 2020, Théo FIDRY
  * Copyright (c) 2025, Alexey Kopytko
  *
  * All rights reserved.
@@ -37,18 +39,17 @@ declare(strict_types=1);
 namespace DIContainer;
 
 use Psr\Container\ContainerInterface;
-use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
 
 use function array_key_exists;
 use function count;
+use function get_class;
 use function is_a;
 use function Pipeline\take;
 use function reset;
 use function sprintf;
-use function gettype;
 
 /**
  * @final
@@ -68,7 +69,7 @@ class Container implements ContainerInterface
     /**
      * @param array<class-string<object>, callable> $values
      */
-    public function __construct(array $values)
+    public function __construct(array $values = [])
     {
         foreach ($values as $id => $value) {
             $this->offsetSet($id, $value);
@@ -94,7 +95,7 @@ class Container implements ContainerInterface
     private function setValueOrThrow(string $id, object $value): object
     {
         if (!$value instanceof $id) {
-            throw new InvalidArgumentException(sprintf('Expected instance of %s, got %s', $id, gettype($value)));
+            throw new Exception(sprintf('Expected instance of %s, got %s', $id, get_class($value)));
         }
 
         $this->values[$id] = $value;
@@ -108,13 +109,14 @@ class Container implements ContainerInterface
      * @param class-string<T> $id
      * @return T
      */
-    public function get(string $id): object
+    public function get(string $id)
     {
         if (array_key_exists($id, $this->values)) {
             return $this->values[$id];
         }
 
         if (array_key_exists($id, $this->factories)) {
+            /** @var T $value */
             $value = $this->factories[$id]($this);
 
             return $this->setValueOrThrow($id, $value);
@@ -123,11 +125,9 @@ class Container implements ContainerInterface
         $value = $this->createService($id);
 
         if (null === $value) {
-            // TODO NotFoundExceptionInterface
-            throw new InvalidArgumentException(sprintf('Unknown service "%s"', $id));
+            throw new Exception(sprintf('Unknown service "%s"', $id));
         }
 
-        // TODO NotFoundExceptionInterface
         return $this->setValueOrThrow($id, $value);
     }
 
@@ -166,7 +166,7 @@ class Container implements ContainerInterface
      * Builds a potentially incomplete list of arguments for a constructor; as list of arguments may
      * contain null values, we use a generator that can yield none or one value as an option type.
      *
-     * @return iterable<object>
+     * @return iterable<array-key, object>
      */
     private function resolveParameter(ReflectionParameter $parameter): iterable
     {
@@ -179,7 +179,7 @@ class Container implements ContainerInterface
 
         // Not considering composite types, such as unions or intersections, for now
         if (!$paramType instanceof ReflectionNamedType) {
-            throw new InvalidArgumentException('Composite types are not supported');
+            throw new Exception('Composite types are not supported');
         }
 
         // Only attempt to resolve a non-built-in named type (a class/interface)
@@ -214,7 +214,7 @@ class Container implements ContainerInterface
      *
      * @template T of object
      * @param class-string<T> $type the class or interface name to find factories for
-     * @return class-string<T>[] a list of factory IDs (class-strings) that are compatible with the given type
+     * @return list<class-string<object>> a list of factory IDs (class-strings) that are compatible with the given type
      */
     private function factoriesForType(string $type): array
     {
@@ -234,6 +234,7 @@ class Container implements ContainerInterface
             return true;
         }
 
+        // Very pessimistic; could probably try to create it.
         return false;
     }
 }
