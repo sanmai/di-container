@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<phpunit bootstrap="vendor/autoload.php"
+         executionOrder="random"
+         resolveDependencies="true"
+         colors="true"
+         cacheDirectory="build/.phpunit.cache"
+         requireCoverageMetadata="true"
+         beStrictAboutOutputDuringTests="true"
+         failOnRisky="true"
+>
+    <testsuites>
+        <testsuite name="Main">
+            <directory>tests/</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory suffix=".php">src/</directory>
+        </include>
+    </source>
+</phpunit>

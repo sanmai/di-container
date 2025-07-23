@@ -1,0 +1,47 @@
+{
+    "name": "sanmai/di-container",
+    "description": "Straightforward DI container with autowiring",
+    "license": "BSD-3-Clause",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Alexey Kopytko",
+            "email": "alexey@kopytko.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "sanmai/pipeline": "^6.17 || ^7.0",
+        "psr/container": "^2.0"
+    },
+    "require-dev": {
+        "ergebnis/composer-normalize": "^2.8",
+        "friendsofphp/php-cs-fixer": "^3.17",
+        "infection/infection": ">=0.29",
+        "php-coveralls/php-coveralls": "^2.4.1",
+        "phpstan/extension-installer": "^1.4",
+        "phpunit/phpunit": "^11.5.25",
+        "sanmai/phpstan-rules": "^0.3.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "DIContainer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\DIContainer\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "ergebnis/composer-normalize": true,
+            "infection/extension-installer": true,
+            "phpstan/extension-installer": true
+        },
+        "optimize-autoloader": true
+    },
+    "extra": {
+        "preferred-install": "dist"
+    }
+}
