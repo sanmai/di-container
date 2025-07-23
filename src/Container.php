@@ -120,7 +120,7 @@ class Container implements ContainerInterface
         if (
             array_key_exists($id, $this->factories) &&
             is_string($this->factories[$id]) &&
-            is_subclass_of($this->getStr($id), Builder::class)
+            is_subclass_of($this->factories[$id], Builder::class)
         ) {
             /** @var Builder<T> $builder */
             $builder = $this->get($this->factories[$id]);
