@@ -44,8 +44,10 @@ $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects datab
 Builder objects encapsulate complex construction logic while leveraging dependency injection for their own dependencies:
 
 ```php
+use DIContainer\Builder;
+
 // Builder that accepts injectable dependencies
-class DatabaseBuilder
+class DatabaseBuilder implements Builder
 {
     public function __construct(
         private readonly ConfigProvider $config,
