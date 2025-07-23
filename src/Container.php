@@ -90,8 +90,9 @@ class Container implements ContainerInterface
     {
         unset($this->values[$id]);
 
-        // We consider callables first as considering builders first will be a BC break:
-        // existing code may rely on callables whenever they implement this interface or not
+        // A value can be a callable and also implement our `Builder` interface:
+        // we must treat such cases as factories, not builders, to ensure
+        // backward compatibility with the existing code that uses callables.
         if (is_callable($value)) {
             $this->factories[$id] = $value;
             return;
