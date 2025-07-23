@@ -1,7 +1,7 @@
 <?php
-
 /**
  * Copyright (c) 2017, Maks Rafalko
+ * Copyright (c) 2020, Théo FIDRY
  * Copyright (c) 2025, Alexey Kopytko
  *
  * All rights reserved.
