@@ -41,7 +41,7 @@ $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects datab
 
 ## Builder Objects
 
-Builder objects separate construction concerns from the container, making them independently testable and reusable while leveraging dependency injection for their own dependencies.
+Builder objects can encapsulate arbitrary complex construction logic. They can use dependency injection, which makes them cohesive, independently testable, and reusable.
 
 ```php
 use DIContainer\Builder;
