@@ -90,6 +90,7 @@ class Container implements ContainerInterface
     {
         unset($this->values[$id]);
 
+        // We consider callables first as considering builders first will be a BC break
         if (is_callable($value)) {
             $this->factories[$id] = $value;
             return;
@@ -127,18 +128,14 @@ class Container implements ContainerInterface
             return $this->values[$id];
         }
 
-        if (
-            array_key_exists($id, $this->builders)
-        ) {
+        if (array_key_exists($id, $this->builders)) {
             /** @var Builder<T> $builder */
             $builder = $this->get($this->builders[$id]);
 
             return $this->setValueOrThrow($id, $builder->build());
         }
 
-        if (
-            array_key_exists($id, $this->factories)
-        ) {
+        if (array_key_exists($id, $this->factories)) {
             /** @var T $value */
             $value = $this->factories[$id]($this);
 
