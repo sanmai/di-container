@@ -38,7 +38,6 @@ declare(strict_types=1);
 namespace DIContainer;
 
 use Psr\Container\ContainerInterface;
-use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -95,7 +94,7 @@ class Container implements ContainerInterface
     private function setValueOrThrow(string $id, object $value): object
     {
         if (!$value instanceof $id) {
-            throw new InvalidArgumentException(sprintf('Expected instance of %s, got %s', $id, gettype($value)));
+            throw new Exception(sprintf('Expected instance of %s, got %s', $id, gettype($value)));
         }
 
         $this->values[$id] = $value;
@@ -124,11 +123,9 @@ class Container implements ContainerInterface
         $value = $this->createService($id);
 
         if (null === $value) {
-            // TODO NotFoundExceptionInterface
-            throw new InvalidArgumentException(sprintf('Unknown service "%s"', $id));
+            throw new Exception(sprintf('Unknown service "%s"', $id));
         }
 
-        // TODO NotFoundExceptionInterface
         return $this->setValueOrThrow($id, $value);
     }
 
@@ -180,7 +177,7 @@ class Container implements ContainerInterface
 
         // Not considering composite types, such as unions or intersections, for now
         if (!$paramType instanceof ReflectionNamedType) {
-            throw new InvalidArgumentException('Composite types are not supported');
+            throw new Exception('Composite types are not supported');
         }
 
         // Only attempt to resolve a non-built-in named type (a class/interface)

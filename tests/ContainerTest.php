@@ -43,12 +43,13 @@ use PHPUnit\Framework\TestCase;
 use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
 use Tests\DIContainer\Fixtures\DependentObject;
+use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\SimpleObject;
 
 #[CoversClass(Container::class)]
 class ContainerTest extends TestCase
 {
-    public function testContainer(): void
+    public function testItBuildsSimpleObjects(): void
     {
         $container = new Container();
         $object = $container->get(SimpleObject::class);
@@ -63,7 +64,7 @@ class ContainerTest extends TestCase
         $this->assertSame($object, $dependentObject->getSimpleObject());
     }
 
-    public function testWithBuilder(): void
+    public function testItWorksWithBuilderObject(): void
     {
         $container = new Container([
             ComplexObject::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
@@ -74,5 +75,15 @@ class ContainerTest extends TestCase
         $this->assertSame('hello', $object->getName());
 
         $this->assertSame($container->get(SimpleObject::class), $object->getObject());
+    }
+
+    public function testItResolvesInterfaceBuilders(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
+        ]);
+
+        $object = $container->get(NamedObjectInterface::class);
+        $this->assertSame('hello', $object->getName());
     }
 }

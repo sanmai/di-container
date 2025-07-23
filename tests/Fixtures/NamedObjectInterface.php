@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (c) 2017, Maks Rafalko
  * Copyright (c) 2025, Alexey Kopytko
@@ -35,20 +34,7 @@
 
 namespace Tests\DIContainer\Fixtures;
 
-class ComplexObject implements NamedObjectInterface
+interface NamedObjectInterface
 {
-    public function __construct(
-        private readonly string $name,
-        private readonly SimpleObject $object
-    ) {}
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function getObject(): SimpleObject
-    {
-        return $this->object;
-    }
+    public function getName(): string;
 }

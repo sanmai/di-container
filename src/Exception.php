@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (c) 2017, Maks Rafalko
  * Copyright (c) 2025, Alexey Kopytko
@@ -33,22 +32,11 @@
  *
  */
 
-namespace Tests\DIContainer\Fixtures;
+declare(strict_types=1);
 
-class ComplexObject implements NamedObjectInterface
-{
-    public function __construct(
-        private readonly string $name,
-        private readonly SimpleObject $object
-    ) {}
+namespace DIContainer;
 
-    public function getName(): string
-    {
-        return $this->name;
-    }
+use Psr\Container\NotFoundExceptionInterface;
+use InvalidArgumentException;
 
-    public function getObject(): SimpleObject
-    {
-        return $this->object;
-    }
-}
+class Exception extends InvalidArgumentException implements NotFoundExceptionInterface {}
