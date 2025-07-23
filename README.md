@@ -32,7 +32,8 @@ $container = new Container([
         $container->get(SomeDependency::class),
         $container->get(AnotherProvider::class)->getValue()
     ),
-    DatabaseInterface::class => fn(Container $container) => $container->get(DatabaseBuilder::class)->build(),
+    DatabaseInterface::class => fn(Container $container) =>
+        $container->get(DatabaseBuilder::class)->build(),
 ]);
 
 $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects database

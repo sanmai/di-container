@@ -178,6 +178,17 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(DependentObject::class, $object);
     }
 
+    public function testItUnderstandsBuilders(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => ComplexObjectBuilder::class,
+        ]);
+
+        $object = $container->get(NamedObjectInterface::class);
+
+        $this->assertSame('hello', $object->getName());
+    }
+
     public function testItHas(): void
     {
         $container = new Container([
