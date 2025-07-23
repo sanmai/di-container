@@ -167,4 +167,18 @@ class ContainerTest extends TestCase
         $container->get(NameNeeder::class);
     }
 
+    public function testItHas(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
+        ]);
+
+        $this->assertTrue($container->has(NamedObjectInterface::class));
+
+        $this->assertFalse($container->has(SimpleObject::class));
+
+        $container->get(SimpleObject::class);
+
+        $this->assertTrue($container->has(SimpleObject::class));
+    }
 }
