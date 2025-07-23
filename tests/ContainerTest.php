@@ -47,6 +47,7 @@ use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
 use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
+use Tests\DIContainer\Fixtures\NameNeeder;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
 use Tests\DIContainer\Fixtures\VariadicConstructor;
@@ -88,7 +89,7 @@ class ContainerTest extends TestCase
             NamedObjectInterface::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
         ]);
 
-        $object = $container->get(NamedObjectInterface::class);
+        $object = $container->get(NameNeeder::class);
 
         $this->assertSame('hello', $object->getName());
     }
@@ -154,4 +155,16 @@ class ContainerTest extends TestCase
 
         $container->get(ComplexDepender::class);
     }
+
+    public function testItThrowsIfMultipleBuilders(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
+            ComplexObject::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
+        ]);
+
+        $this->expectExceptionMessage('Unknown service');
+        $container->get(NameNeeder::class);
+    }
+
 }
