@@ -34,19 +34,15 @@
  *
  */
 
-namespace Tests\DIContainer\Fixtures;
+namespace DIContainer;
 
-use DIContainer\Builder;
-
-class ComplexObjectBuilder implements Builder
+/**
+ * @template T of object
+ */
+interface Builder
 {
-    public function __construct(private readonly NameProvider $nameProvider, private readonly SimpleObject $simpleObject) {}
-
-    public function build(): ComplexObject
-    {
-        return new ComplexObject(
-            $this->nameProvider->getName(),
-            $this->simpleObject
-        );
-    }
+    /**
+     * @return T
+     */
+    public function build();
 }

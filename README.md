@@ -32,7 +32,8 @@ $container = new Container([
         $container->get(SomeDependency::class),
         $container->get(AnotherProvider::class)->getValue()
     ),
-    DatabaseInterface::class => fn(Container $container) => $container->get(DatabaseBuilder::class)->build(),
+    DatabaseInterface::class => fn(Container $container) =>
+        $container->get(DatabaseBuilder::class)->build(),
 ]);
 
 $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects database
@@ -40,11 +41,13 @@ $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects datab
 
 ## Builder Objects
 
-Builder objects encapsulate complex construction logic while leveraging dependency injection for their own dependencies:
+Builder objects can encapsulate arbitrary complex construction logic. They can use dependency injection, which makes them cohesive, independently testable, and reusable.
 
 ```php
+use DIContainer\Builder;
+
 // Builder that accepts injectable dependencies
-class DatabaseBuilder
+class DatabaseBuilder implements Builder
 {
     public function __construct(
         private readonly ConfigProvider $config,
@@ -62,7 +65,19 @@ class DatabaseBuilder
 }
 ```
 
-This pattern allows complex object construction while keeping configuration in dedicated, testable services.
+When you implement the `Builder` interface, you can simply provide the builder class name instead of a closure. The container automatically detects builder classes and handles the instantiation and `build()` method call.
+
+```php
+// 1. Direct class name, if the class implements DIContainer\Builder interface
+$container = new Container([
+    DatabaseInterface::class => DatabaseBuilder::class,
+]);
+
+// 2. Explicit closure - what will the container do under the hood
+$container = new Container([
+    DatabaseInterface::class => fn(Container $container) => $container->get(DatabaseBuilder::class)->build(),
+]);
+```
 
 ## Testing
 

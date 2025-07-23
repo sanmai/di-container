@@ -47,6 +47,7 @@ use function array_key_exists;
 use function count;
 use function get_class;
 use function is_a;
+use function is_callable;
 use function Pipeline\take;
 use function reset;
 use function sprintf;
@@ -67,7 +68,12 @@ class Container implements ContainerInterface
     private array $factories = [];
 
     /**
-     * @param array<class-string<object>, callable> $values
+     * @var array<class-string<object>, class-string<Builder<object>>>
+     */
+    private array $builders = [];
+
+    /**
+     * @param array<class-string<object>, callable|class-string<Builder<object>>> $values
      */
     public function __construct(array $values = [])
     {
@@ -78,12 +84,21 @@ class Container implements ContainerInterface
 
     /**
      * @param class-string<object> $id
-     * @param callable(self): object $value
+     * @param class-string<Builder<object>>|callable(self): object $value
      */
-    private function offsetSet(string $id, callable $value): void
+    private function offsetSet(string $id, callable|string $value): void
     {
-        $this->factories[$id] = $value;
         unset($this->values[$id]);
+
+        // A value can be a callable and also implement our `Builder` interface:
+        // we must treat such cases as factories, not builders, to ensure
+        // backward compatibility with the existing code that uses callables.
+        if (is_callable($value)) {
+            $this->factories[$id] = $value;
+            return;
+        }
+
+        $this->builders[$id] = $value;
     }
 
     /**
@@ -113,6 +128,13 @@ class Container implements ContainerInterface
     {
         if (array_key_exists($id, $this->values)) {
             return $this->values[$id];
+        }
+
+        if (array_key_exists($id, $this->builders)) {
+            /** @var Builder<T> $builder */
+            $builder = $this->get($this->builders[$id]);
+
+            return $this->setValueOrThrow($id, $builder->build());
         }
 
         if (array_key_exists($id, $this->factories)) {
