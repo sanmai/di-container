@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (c) 2017, Maks Rafalko
  * Copyright (c) 2025, Alexey Kopytko
@@ -33,46 +32,12 @@
  *
  */
 
-declare(strict_types=1);
+namespace Tests\DIContainer\Fixtures;
 
-namespace Tests\DIContainer;
-
-use DIContainer\Container;
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\TestCase;
-use Tests\DIContainer\Fixtures\ComplexObject;
-use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
-use Tests\DIContainer\Fixtures\DependentObject;
-use Tests\DIContainer\Fixtures\SimpleObject;
-
-#[CoversClass(Container::class)]
-class ContainerTest extends TestCase
+class NameProvider
 {
-    public function testContainer(): void
+    public function getName(): string
     {
-        $container = new Container();
-        $object = $container->get(SimpleObject::class);
-
-        $this->assertInstanceOf(SimpleObject::class, $object);
-
-        $object2 = $container->get(SimpleObject::class);
-        $this->assertSame($object, $object2);
-
-        $dependentObject = $container->get(DependentObject::class);
-
-        $this->assertSame($object, $dependentObject->getSimpleObject());
-    }
-
-    public function testWithBuilder(): void
-    {
-        $container = new Container([
-            ComplexObject::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
-        ]);
-
-        $object = $container->get(ComplexObject::class);
-
-        $this->assertSame('hello', $object->getName());
-
-        $this->assertSame($container->get(SimpleObject::class), $object->getObject());
+        return 'hello';
     }
 }
