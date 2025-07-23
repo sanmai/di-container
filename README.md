@@ -79,6 +79,8 @@ $container = new Container([
 ]);
 ```
 
+Builder objects separate construction concerns from the container, making them independently testable and reusable.
+
 ## Testing
 
 ```bash
