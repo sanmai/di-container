@@ -29,7 +29,7 @@ $service = $container->get(YourService::class);
 // Use builder objects for complex construction, or construct the dependencies directly - your choice
 $container = new Container([
     ComplexObject::class => fn(Container $container) => new ComplexObject(
-        $container->get(SomeDependency::class), 
+        $container->get(SomeDependency::class),
         $container->get(AnotherProvider::class)->getValue()
     ),
     DatabaseInterface::class => fn(Container $container) => $container->get(DatabaseBuilder::class)->build(),
