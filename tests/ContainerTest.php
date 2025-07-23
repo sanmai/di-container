@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (c) 2017, Maks Rafalko
  * Copyright (c) 2020, Théo FIDRY
@@ -38,6 +39,7 @@ declare(strict_types=1);
 namespace Tests\DIContainer;
 
 use DIContainer\Container;
+use DIContainer\Exception;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tests\DIContainer\Fixtures\ComplexObject;
@@ -45,6 +47,7 @@ use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
 use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\SimpleObject;
+use Tests\DIContainer\Fixtures\SomeAbstractObject;
 
 #[CoversClass(Container::class)]
 class ContainerTest extends TestCase
@@ -86,4 +89,26 @@ class ContainerTest extends TestCase
         $object = $container->get(NamedObjectInterface::class);
         $this->assertSame('hello', $object->getName());
     }
+
+    public function testItThrowsOnAbstractClasses(): void
+    {
+        $container = new Container();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(SomeAbstractObject::class);
+    }
+
+    public function testItThrowsOnInterfacesWithoutBuilder(): void
+    {
+        $container = new Container();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(NamedObjectInterface::class);
+    }
+
+
 }

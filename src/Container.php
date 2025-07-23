@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (c) 2017, Maks Rafalko
  * Copyright (c) 2020, Théo FIDRY
@@ -232,6 +233,7 @@ class Container implements ContainerInterface
             return true;
         }
 
+        // Very pessimistic; could probably try to create it.
         return false;
     }
 }
