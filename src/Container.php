@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (c) 2017, Maks Rafalko
  * Copyright (c) 2025, Alexey Kopytko
@@ -68,7 +69,7 @@ class Container implements ContainerInterface
     /**
      * @param array<class-string<object>, callable> $values
      */
-    public function __construct(array $values)
+    public function __construct(array $values = [])
     {
         foreach ($values as $id => $value) {
             $this->offsetSet($id, $value);
