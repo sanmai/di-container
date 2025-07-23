@@ -36,7 +36,13 @@
 
 namespace DIContainer;
 
+/**
+ * @template T of object
+ */
 interface Builder
 {
+    /**
+     * @return T
+     */
     public function build();
 }

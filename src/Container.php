@@ -47,6 +47,7 @@ use function array_key_exists;
 use function count;
 use function get_class;
 use function is_a;
+use function is_callable;
 use function is_string;
 use function is_subclass_of;
 use function Pipeline\take;
@@ -64,12 +65,12 @@ class Container implements ContainerInterface
     private array $values = [];
 
     /**
-     * @var array<class-string<object>, callable|class-string<Builder>>
+     * @var array<class-string<object>, callable|class-string<Builder<object>>>
      */
     private array $factories = [];
 
     /**
-     * @param array<class-string<object>, callable|class-string<Builder>> $values
+     * @param array<class-string<object>, callable|class-string<Builder<object>>> $values
      */
     public function __construct(array $values = [])
     {
@@ -80,7 +81,7 @@ class Container implements ContainerInterface
 
     /**
      * @param class-string<object> $id
-     * @param class-string<Builder>|callable(self): object $value
+     * @param class-string<Builder<object>>|callable(self): object $value
      */
     private function offsetSet(string $id, callable|string $value): void
     {
@@ -128,7 +129,10 @@ class Container implements ContainerInterface
             return $this->setValueOrThrow($id, $builder->build());
         }
 
-        if (array_key_exists($id, $this->factories)) {
+        if (
+            array_key_exists($id, $this->factories) &&
+            is_callable($this->factories[$id])
+        ) {
             /** @var T $value */
             $value = $this->factories[$id]($this);
 
