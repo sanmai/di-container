@@ -87,7 +87,20 @@ class ContainerTest extends TestCase
         ]);
 
         $object = $container->get(NamedObjectInterface::class);
+
         $this->assertSame('hello', $object->getName());
+    }
+
+    public function testItThrowsOnUnexpectedTypesReturnedFromFactories(): void
+    {
+        $container = new Container([
+            SomeAbstractObject::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
+        ]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessageMatches('/Expected instance of .*SomeAbstractObject, got .*ComplexObject/');
+
+        $container->get(SomeAbstractObject::class);
     }
 
     public function testItThrowsOnAbstractClasses(): void
@@ -95,7 +108,7 @@ class ContainerTest extends TestCase
         $container = new Container();
 
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Unknown service');
+        $this->expectExceptionMessageMatches('/Unknown service ".*SomeAbstractObject"/');
 
         $container->get(SomeAbstractObject::class);
     }

@@ -45,6 +45,7 @@ use ReflectionParameter;
 
 use function array_key_exists;
 use function count;
+use function get_class;
 use function is_a;
 use function Pipeline\take;
 use function reset;
@@ -95,7 +96,7 @@ class Container implements ContainerInterface
     private function setValueOrThrow(string $id, object $value): object
     {
         if (!$value instanceof $id) {
-            throw new Exception(sprintf('Expected instance of %s, got %s', $id, gettype($value)));
+            throw new Exception(sprintf('Expected instance of %s, got %s', $id, get_class($value)));
         }
 
         $this->values[$id] = $value;
