@@ -109,7 +109,7 @@ class Container implements ContainerInterface
      * @param class-string<T> $id
      * @return T
      */
-    public function get(string $id): object
+    public function get(string $id)
     {
         if (array_key_exists($id, $this->values)) {
             return $this->values[$id];

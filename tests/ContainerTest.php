@@ -167,6 +167,17 @@ class ContainerTest extends TestCase
         $container->get(NameNeeder::class);
     }
 
+    public function testItIgnoresRedundantBuilders(): void
+    {
+        $container = new Container([
+            SimpleObject::class => static fn(Container $container) => new SimpleObject(),
+        ]);
+
+        $object = $container->get(DependentObject::class);
+
+        $this->assertInstanceOf(DependentObject::class, $object);
+    }
+
     public function testItHas(): void
     {
         $container = new Container([

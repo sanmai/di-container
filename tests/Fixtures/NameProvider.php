@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (c) 2017, Maks Rafalko
  * Copyright (c) 2020, Théo FIDRY
@@ -35,7 +36,7 @@
 
 namespace Tests\DIContainer\Fixtures;
 
-class NameProvider
+class NameProvider implements NamedObjectInterface
 {
     public function getName(): string
     {
