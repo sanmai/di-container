@@ -40,6 +40,8 @@ $container = new Container([
 $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects database
 ```
 
+The order in which you define your services is not important, as dependencies are only resolved when they are requested.
+
 ## Builder Objects
 
 Builder objects can encapsulate arbitrary complex construction logic. They can use dependency injection, which makes them cohesive, independently testable, and reusable.
@@ -79,6 +81,8 @@ $container = new Container([
     DatabaseInterface::class => fn(Container $container) => $container->get(DatabaseBuilder::class)->build(),
 ]);
 ```
+
+For setting dependencies on the fly, there's a handy `set()` method that accepts both callables and builders.
 
 ## Design Philosophy
 
