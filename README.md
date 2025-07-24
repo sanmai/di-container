@@ -80,6 +80,18 @@ $container = new Container([
 ]);
 ```
 
+## Design Philosophy
+
+This container prioritizes simplicity, predictability, and architectural purity. It achieves this through:
+
+- Predictable autowiring; there are no complex background scans or fragile naming conventions.
+- Lack of surprises; the container will only resolve an interface if it can find **exactly one** registered factory or builder that produces a compatible implementation. It will never guess, ensuring the dependency graph is always clear, just as your day is worry-free.
+- Constructor-only dependency injection; the container intentionally avoids complex features, such as property/method injection or support for variadic/composite types in constructors. This approach promotes cleaner, more testable class designs.
+
+The container resolves interfaces using a straightforward rule: when a dependency is an interface, it looks for exactly one registered factory or a builder that produces a compatible object.
+
+This approach allows you to wire dependencies without explicitly linking an implementation to an interface; the container connects them logically as long as the relationship is unambiguous.
+
 ## Testing
 
 ```bash
