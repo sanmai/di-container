@@ -187,6 +187,10 @@ class ContainerTest extends TestCase
         $object = $container->get(NamedObjectInterface::class);
 
         $this->assertSame('hello', $object->getName());
+
+        $nameNeeder = $container->get(NameNeeder::class);
+
+        $this->assertSame('hello', $nameNeeder->getName());
     }
 
     public function testItHas(): void
