@@ -52,9 +52,6 @@ use function Pipeline\take;
 use function reset;
 use function sprintf;
 
-/**
- * @final
- */
 class Container implements ContainerInterface
 {
     /**

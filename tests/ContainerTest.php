@@ -210,4 +210,11 @@ class ContainerTest extends TestCase
 
         $this->assertSame('hello', $container->get(NameNeeder::class)->getName());
     }
+
+    public function testItCanBeExtended(): void
+    {
+        $container = new class ([]) extends Container {};
+
+        $this->assertFalse($container->has(NamedObjectInterface::class));
+    }
 }
