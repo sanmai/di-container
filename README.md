@@ -92,6 +92,8 @@ The container resolves interfaces using a straightforward rule: when a dependenc
 
 This approach allows you to wire dependencies without explicitly linking an implementation to an interface; the container connects them logically as long as the relationship is unambiguous.
 
+The container omits circular dependency checks for simplicity, an issue that even the most minimal automatic test will immediately reveal.
+
 ## Testing
 
 ```bash
