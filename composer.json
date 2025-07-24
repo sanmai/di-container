@@ -3,6 +3,12 @@
     "description": "dependency injection container with automatic constructor dependency resolution",
     "license": "BSD-3-Clause",
     "type": "library",
+    "keywords": [
+        "di container",
+        "psr 11",
+        "autowiring",
+        "constructor di"
+    ],
     "authors": [
         {
             "name": "Alexey Kopytko",
