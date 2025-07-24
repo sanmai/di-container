@@ -1,6 +1,6 @@
 {
     "name": "sanmai/di-container",
-    "description": "Straightforward DI container with autowiring",
+    "description": "dependency injection container with automatic constructor dependency resolution",
     "license": "BSD-3-Clause",
     "type": "library",
     "authors": [
