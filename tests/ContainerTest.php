@@ -202,5 +202,12 @@ class ContainerTest extends TestCase
         $container->get(SimpleObject::class);
 
         $this->assertTrue($container->has(SimpleObject::class));
+
+        $container->set(
+            NameNeeder::class,
+            static fn(Container $container) => new NameNeeder($container->get(NamedObjectInterface::class))
+        );
+
+        $this->assertSame('hello', $container->get(NameNeeder::class)->getName());
     }
 }

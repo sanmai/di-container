@@ -73,12 +73,12 @@ class Container implements ContainerInterface
     private array $builders = [];
 
     /**
-     * @param array<class-string<object>, callable|class-string<Builder<object>>> $values
+     * @param iterable<class-string<object>, callable|class-string<Builder<object>>> $values
      */
-    public function __construct(array $values = [])
+    public function __construct(iterable $values = [])
     {
         foreach ($values as $id => $value) {
-            $this->offsetSet($id, $value);
+            $this->set($id, $value);
         }
     }
 
@@ -86,7 +86,7 @@ class Container implements ContainerInterface
      * @param class-string<object> $id
      * @param class-string<Builder<object>>|callable(self): object $value
      */
-    private function offsetSet(string $id, callable|string $value): void
+    public function set(string $id, callable|string $value): void
     {
         unset($this->values[$id]);
 
