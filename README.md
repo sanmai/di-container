@@ -34,8 +34,10 @@ $container = new Container([
     ),
     DatabaseInterface::class => fn(Container $container) =>
         $container->get(DatabaseBuilder::class)->build(),
-    LoggerInterface::class => fn() => new FileLogger('app.log'),
 ]);
+
+// Set additional dependencies on the fly
+$container->set(LoggerInterface::class, fn() => new FileLogger('debug.log'));
 
 $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects database
 ```
