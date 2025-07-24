@@ -6,7 +6,16 @@
     "authors": [
         {
             "name": "Alexey Kopytko",
-            "email": "alexey@kopytko.com"
+            "email": "alexey@kopytko.com",
+            "homepage": "https://github.com/sanmai"
+        },
+        {
+            "name": "Maks Rafalko",
+            "homepage": "https://twitter.com/maks_rafalko"
+        },
+        {
+            "name": "Théo FIDRY",
+            "homepage": "https://twitter.com/tfidry"
         }
     ],
     "require": {
