@@ -2,7 +2,7 @@
 
 A straightforward PSR-11 dependency injection container with automatic constructor dependency resolution.
 
-I designed the autowiring [initially for Infection's own use](https://github.com/infection/infection/pull/2118) with focus on simplicity and zero configuration, buiding on the existing implementation by [Maks Rafalko](https://github.com/maks-rafalko) and [Théo Fidry](https://github.com/theofidry).
+I designed the autowiring [initially for Infection's own use](https://github.com/infection/infection/pull/2118) with focus on simplicity and zero configuration, building on the existing implementation by [Maks Rafalko](https://github.com/maks-rafalko) and [Théo Fidry](https://github.com/theofidry).
 
 ## Installation
 
