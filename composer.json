@@ -26,7 +26,7 @@
     ],
     "require": {
         "php": ">=8.2",
-        "psr/container": "^2.0",
+        "psr/container": "^1.1.2 || ^2.0",
         "sanmai/pipeline": "^6.17 || ^7.0"
     },
     "require-dev": {
