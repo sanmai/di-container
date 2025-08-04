@@ -14,7 +14,7 @@ on:
 
 jobs:
   tests:
-    name: Tests with PHP ${{ matrix.php-version }}
+    name: Tests with PHP ${{ matrix.php-version }}, PSR Container ${{ matrix.psr-container-version }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -24,6 +24,11 @@ jobs:
           - '8.3'
           - '8.4'
           - 'latest'
+        psr-container-version:
+          - 'v2'
+        include:
+          - php-version: 'latest'
+            psr-container-version: 'v1'
 
     steps:
       - name: Checkout code
@@ -44,6 +49,11 @@ jobs:
           restore-keys: |
             composer-${{ matrix.php-version }}-
             composer-
+
+      - name: Require PSR Container v1
+        if: matrix.psr-container-version == 'v1'
+        run: |
+          composer require --no-update psr/container:^1
 
       - name: Install dependencies
         run: |
