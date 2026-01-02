@@ -221,4 +221,26 @@ class ContainerTest extends TestCase
 
         $this->assertFalse($container->has(NamedObjectInterface::class));
     }
+
+    public function testItSkipsTypeCheckForNonNamespacedIds(): void
+    {
+        $container = new Container([
+            'locator' => static fn() => new SimpleObject(),
+        ]);
+
+        $object = $container->get('locator');
+
+        $this->assertInstanceOf(SimpleObject::class, $object);
+    }
+
+    public function testItSkipsTypeCheckForDottedIds(): void
+    {
+        $container = new Container([
+            'app.locator' => static fn() => new SimpleObject(),
+        ]);
+
+        $object = $container->get('app.locator');
+
+        $this->assertInstanceOf(SimpleObject::class, $object);
+    }
 }

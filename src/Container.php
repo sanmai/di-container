@@ -51,6 +51,7 @@ use function is_callable;
 use function Pipeline\take;
 use function reset;
 use function sprintf;
+use function str_contains;
 
 class Container implements ContainerInterface
 {
@@ -106,6 +107,14 @@ class Container implements ContainerInterface
      */
     private function setValueOrThrow(string $id, object $value): object
     {
+        // Break the contract to skip the type check for IDs that do not look like a valid namespaced PHP class name
+        if (str_contains($id, '.') || !str_contains($id, '\\')) {
+            $this->values[$id] = $value;
+
+            // @phpstan-ignore return.type
+            return $value;
+        }
+
         if (!$value instanceof $id) {
             throw new Exception(sprintf('Expected instance of %s, got %s', $id, get_class($value)));
         }
