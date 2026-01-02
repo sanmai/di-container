@@ -86,6 +86,21 @@ $container = new Container([
 
 For setting dependencies on the fly, there's a handy `set()` method that accepts both callables and builders.
 
+## Non-Class Service IDs
+
+By default, the container validates that factories return instances matching their registered class names. To bypass this validation (e.g., for the decorator pattern), use a non-class string as the service ID:
+
+```php
+$container = new Container([
+    // Type validation is skipped for IDs that don't look like namespaced class names
+    'app.repository' => fn() => new CachedRepository(new DatabaseRepository()),
+]);
+
+$repository = $container->get('app.repository');
+```
+
+The container skips type validation when the service ID contains a dot or lacks a namespace separator.
+
 ## Design Philosophy
 
 This container prioritizes simplicity, predictability, and architectural purity. It achieves this through:
