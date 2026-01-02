@@ -93,10 +93,10 @@ By default, the container validates that factories return instances matching the
 ```php
 $container = new Container([
     // Type validation is skipped for IDs that don't look like namespaced class names
-    'app.locator' => fn() => new MemoizedLocator(new PHPUnitLocator()),
+    'app.repository' => fn() => new CachedRepository(new DatabaseRepository()),
 ]);
 
-$locator = $container->get('app.locator');
+$repository = $container->get('app.repository');
 ```
 
 The container skips type validation when the service ID contains a dot or lacks a namespace separator.
