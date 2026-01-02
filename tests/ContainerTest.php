@@ -51,6 +51,8 @@ use Tests\DIContainer\Fixtures\NameNeeder;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
 use Tests\DIContainer\Fixtures\VariadicConstructor;
+use Closure;
+use SplFileInfo;
 
 #[CoversClass(Container::class)]
 class ContainerTest extends TestCase
@@ -224,13 +226,15 @@ class ContainerTest extends TestCase
 
     public function testItSkipsTypeCheckForNonNamespacedIds(): void
     {
+        // Edge case: SplFileInfo is a real non-namespaced class, but we return Closure.
+        // Type check is skipped because the ID lacks a namespace separator.
         $container = new Container([
-            'locator' => static fn() => new SimpleObject(),
+            SplFileInfo::class => static fn() => static fn() => null,
         ]);
 
-        $object = $container->get('locator');
+        $object = $container->get(SplFileInfo::class);
 
-        $this->assertInstanceOf(SimpleObject::class, $object);
+        $this->assertInstanceOf(Closure::class, $object);
     }
 
     public function testItSkipsTypeCheckForDottedIds(): void
