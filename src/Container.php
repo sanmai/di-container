@@ -107,7 +107,7 @@ class Container implements ContainerInterface
      */
     private function setValueOrThrow(string $id, object $value): object
     {
-        // Break the contract to skip the type check for IDs that do not look like a valid namespaced PHP class name
+        // Skip the type check for IDs that do not look like a valid namespaced PHP class name
         if (str_contains($id, '.') || !str_contains($id, '\\')) {
             $this->values[$id] = $value;
 
