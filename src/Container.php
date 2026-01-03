@@ -75,6 +75,8 @@ class Container implements ContainerInterface
      */
     public function __construct(iterable $values = [])
     {
+        $this->values[ContainerInterface::class] = $this;
+
         foreach ($values as $id => $value) {
             $this->set($id, $value);
         }
@@ -134,11 +136,6 @@ class Container implements ContainerInterface
     {
         if (array_key_exists($id, $this->values)) {
             return $this->values[$id];
-        }
-
-        if (is_a($id, ContainerInterface::class, true)) {
-            // @phpstan-ignore return.type
-            return $this;
         }
 
         if (array_key_exists($id, $this->builders)) {

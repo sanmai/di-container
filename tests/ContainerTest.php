@@ -253,7 +253,6 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $this->assertSame($container, $container->get(Container::class));
         $this->assertSame($container, $container->get(ContainerInterface::class));
     }
 }
