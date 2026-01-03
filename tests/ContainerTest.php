@@ -258,10 +258,19 @@ class ContainerTest extends TestCase
 
     public function testItAllowsOverridingContainerInterface(): void
     {
-        // Overriding Container::class does not affect ContainerInterface::class.
-        // This is intentional: ContainerInterface always returns $this unless
-        // explicitly overridden. Users who override concrete Container::class
-        // while depending on ContainerInterface get what they asked for.
+        $custom = new Container();
+
+        $container = new Container([
+            ContainerInterface::class => static fn() => $custom,
+        ]);
+
+        $this->assertSame($custom, $container->get(ContainerInterface::class));
+    }
+
+    public function testItContainerBindingsIndependent(): void
+    {
+        // Bindings are independent: overriding Container::class does not
+        // affect ContainerInterface::class (which still returns $this).
         $custom = new Container();
 
         $container = new Container([
