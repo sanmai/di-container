@@ -253,7 +253,31 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $this->assertSame($container, $container->get(Container::class));
+        $this->assertSame($container, $container->get(ContainerInterface::class));
+    }
+
+    public function testItAllowsOverridingContainerInterface(): void
+    {
+        $custom = new Container();
+
+        $container = new Container([
+            ContainerInterface::class => static fn() => $custom,
+        ]);
+
+        $this->assertSame($custom, $container->get(ContainerInterface::class));
+    }
+
+    public function testItContainerBindingsIndependent(): void
+    {
+        // Bindings are independent: overriding Container::class does not
+        // affect ContainerInterface::class (which still returns $this).
+        $custom = new Container();
+
+        $container = new Container([
+            Container::class => static fn() => $custom,
+        ]);
+
+        $this->assertSame($custom, $container->get(Container::class));
         $this->assertSame($container, $container->get(ContainerInterface::class));
     }
 }
