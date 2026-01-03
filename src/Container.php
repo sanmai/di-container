@@ -136,6 +136,11 @@ class Container implements ContainerInterface
             return $this->values[$id];
         }
 
+        if (is_a($id, ContainerInterface::class, true)) {
+            // @phpstan-ignore return.type
+            return $this;
+        }
+
         if (array_key_exists($id, $this->builders)) {
             /** @var Builder<T> $builder */
             $builder = $this->get($this->builders[$id]);
