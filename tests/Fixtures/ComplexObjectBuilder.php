@@ -38,6 +38,9 @@ namespace Tests\DIContainer\Fixtures;
 
 use DIContainer\Builder;
 
+/**
+ * @implements Builder<ComplexObject>
+ */
 class ComplexObjectBuilder implements Builder
 {
     public function __construct(private readonly NameProvider $nameProvider, private readonly SimpleObject $simpleObject) {}
