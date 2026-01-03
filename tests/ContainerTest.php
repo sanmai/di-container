@@ -255,4 +255,16 @@ class ContainerTest extends TestCase
 
         $this->assertSame($container, $container->get(ContainerInterface::class));
     }
+
+    public function testItAllowsOverridingContainerInterface(): void
+    {
+        $custom = new Container();
+
+        $container = new Container([
+            Container::class => static fn() => $custom,
+        ]);
+
+        $this->assertSame($custom, $container->get(Container::class));
+        $this->assertSame($container, $container->get(ContainerInterface::class));
+    }
 }
