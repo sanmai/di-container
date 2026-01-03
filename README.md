@@ -51,7 +51,9 @@ Builder objects can encapsulate arbitrary complex construction logic. They can u
 ```php
 use DIContainer\Builder;
 
-// Builder that accepts injectable dependencies
+/**
+ * @implements Builder<DatabaseInterface>
+ */
 class DatabaseBuilder implements Builder
 {
     public function __construct(
@@ -69,6 +71,8 @@ class DatabaseBuilder implements Builder
     }
 }
 ```
+
+The `Builder` interface uses a covariant template (`@template-covariant T`), so PHPStan correctly validates that your builder's return type matches the declared template parameter.
 
 When you implement the `Builder` interface, you can simply provide the builder class name instead of a closure. The container automatically detects builder classes and handles the instantiation and `build()` method call.
 
