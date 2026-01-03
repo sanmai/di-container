@@ -52,6 +52,8 @@ Builder objects can encapsulate arbitrary complex construction logic. They can u
 use DIContainer\Builder;
 
 /**
+ * Builder that accepts injectable dependencies.
+ *
  * @implements Builder<DatabaseInterface>
  */
 class DatabaseBuilder implements Builder
