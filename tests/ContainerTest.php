@@ -40,6 +40,7 @@ namespace Tests\DIContainer;
 
 use DIContainer\Container;
 use DIContainer\Exception;
+use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tests\DIContainer\Fixtures\ComplexDepender;
@@ -246,5 +247,13 @@ class ContainerTest extends TestCase
         $object = $container->get('app.locator');
 
         $this->assertInstanceOf(SimpleObject::class, $object);
+    }
+
+    public function testItInjectsItself(): void
+    {
+        $container = new Container();
+
+        $this->assertSame($container, $container->get(Container::class));
+        $this->assertSame($container, $container->get(ContainerInterface::class));
     }
 }
