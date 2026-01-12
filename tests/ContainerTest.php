@@ -240,12 +240,21 @@ class ContainerTest extends TestCase
 
     public function testItSkipsTypeCheckForDottedIds(): void
     {
-        $container = new Container();
-        $container->bind('app.locator', static fn() => new SimpleObject());
+        $container = new Container(bindings: [
+            'app.locator' => static fn() => new SimpleObject(),
+        ]);
 
         $object = $container->get('app.locator');
 
         $this->assertInstanceOf(SimpleObject::class, $object);
+    }
+
+    public function testBindMethod(): void
+    {
+        $container = new Container();
+        $container->bind('app.service', static fn() => new SimpleObject());
+
+        $this->assertInstanceOf(SimpleObject::class, $container->get('app.service'));
     }
 
     public function testItInjectsItself(): void

@@ -72,13 +72,18 @@ class Container implements ContainerInterface
 
     /**
      * @param iterable<class-string<object>, callable|class-string<Builder<object>>> $values
+     * @param iterable<non-empty-string, callable|class-string<Builder<object>>> $bindings
      */
-    public function __construct(iterable $values = [])
+    public function __construct(iterable $values = [], iterable $bindings = [])
     {
         $this->values[ContainerInterface::class] = $this;
 
         foreach ($values as $id => $value) {
             $this->set($id, $value);
+        }
+
+        foreach ($bindings as $id => $binding) {
+            $this->bind($id, $binding);
         }
     }
 
@@ -91,6 +96,17 @@ class Container implements ContainerInterface
      */
     public function set(string $id, callable|string $value): void
     {
+        $this->bind($id, $value);
+    }
+
+    /**
+     * Register a factory or builder for a non-class service ID (e.g., 'app.locator').
+     *
+     * @param non-empty-string $id
+     * @param class-string<Builder<object>>|callable(self): object $value
+     */
+    public function bind(string $id, callable|string $value): void
+    {
         unset($this->values[$id]);
 
         // A value can be a callable and also implement our `Builder` interface:
@@ -102,24 +118,6 @@ class Container implements ContainerInterface
         }
 
         $this->builders[$id] = $value;
-    }
-
-    /**
-     * Register a factory or builder for a non-class service ID (e.g., 'app.locator').
-     *
-     * @param non-empty-string $id
-     * @param class-string<Builder<object>>|callable(self): object $factory
-     */
-    public function bind(string $id, callable|string $factory): void
-    {
-        unset($this->values[$id]);
-
-        if (is_callable($factory)) {
-            $this->factories[$id] = $factory;
-            return;
-        }
-
-        $this->builders[$id] = $factory;
     }
 
     /**
