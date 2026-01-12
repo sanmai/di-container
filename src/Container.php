@@ -113,7 +113,7 @@ class Container implements ContainerInterface
         if (str_contains($id, '.') || !str_contains($id, '\\')) {
             $this->values[$id] = $value;
 
-            // @phpstan-ignore return.type
+            /** @var T */
             return $value;
         }
 
@@ -248,7 +248,7 @@ class Container implements ContainerInterface
      */
     private function providersForType(string $type): array
     {
-        // @phpstan-ignore return.type (is_a() filter guarantees class-strings, but PHPStan can't narrow this)
+        /** @var list<class-string<object>> */
         return take($this->factories, $this->builders)
             ->keys()
             ->filter(static fn(string $id) => is_a($id, $type, true))
