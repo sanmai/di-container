@@ -24,7 +24,7 @@ export XDEBUG_MODE=coverage
 
 # PHPStan
 PHPSTAN=vendor/bin/phpstan
-PHPSTAN_ARGS_TESTS=analyse src tests -c .phpstan.neon
+PHPSTAN_ARGS_TESTS=analyse -c .phpstan.neon
 PHPSTAN_ARGS_SRC=analyse -c .phpstan.src.neon
 PHPSTAN_ARGS_FIXTURES=analyse -c .phpstan.fixtures.neon
 
