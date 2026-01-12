@@ -24,8 +24,9 @@ export XDEBUG_MODE=coverage
 
 # PHPStan
 PHPSTAN=vendor/bin/phpstan
-PHPSTAN_ARGS_TESTS=analyse src tests --level=2 -c .phpstan.neon
+PHPSTAN_ARGS_TESTS=analyse src tests -c .phpstan.neon
 PHPSTAN_ARGS_SRC=analyse -c .phpstan.src.neon
+PHPSTAN_ARGS_FIXTURES=analyse -c .phpstan.fixtures.neon
 
 # Composer
 COMPOSER=$(PHP) $(shell which composer)
@@ -55,9 +56,10 @@ ci-phpunit: ci-cs
 ci-infection: ci-phpunit
 	$(SILENT) $(PHP) $(INFECTION) $(INFECTION_ARGS)
 
-ci-phpstan: ci-cs .phpstan.neon .phpstan.src.neon
+ci-phpstan: ci-cs .phpstan.neon .phpstan.src.neon .phpstan.fixtures.neon
 	$(SILENT) $(PHP) $(PHPSTAN) $(PHPSTAN_ARGS_SRC) --no-progress
 	$(SILENT) $(PHP) $(PHPSTAN) $(PHPSTAN_ARGS_TESTS) --no-progress
+	$(SILENT) $(PHP) $(PHPSTAN) $(PHPSTAN_ARGS_FIXTURES) --no-progress
 
 ci-cs: prerequisites
 	$(SILENT) $(PHP) $(PHP_CS_FIXER) $(PHP_CS_FIXER_ARGS) --dry-run --stop-on-violation fix
@@ -90,9 +92,10 @@ infection: phpunit
 analyze: phpstan
 
 .PHONY: phpstan
-phpstan: cs .phpstan.src.neon .phpstan.neon
+phpstan: cs .phpstan.src.neon .phpstan.neon .phpstan.fixtures.neon
 	$(SILENT) $(PHP) $(PHPSTAN) $(PHPSTAN_ARGS_SRC)
 	$(SILENT) $(PHP) $(PHPSTAN) $(PHPSTAN_ARGS_TESTS)
+	$(SILENT) $(PHP) $(PHPSTAN) $(PHPSTAN_ARGS_FIXTURES)
 
 .PHONY: cs
 cs: test-prerequisites

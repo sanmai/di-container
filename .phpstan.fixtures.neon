@@ -1,0 +1,6 @@
+parameters:
+    level: max
+    paths:
+        - tests/Fixtures
+    ignoreErrors:
+        - identifier: constructor.unusedParameter
