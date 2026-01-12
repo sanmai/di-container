@@ -92,7 +92,7 @@ class Container implements ContainerInterface
      *
      * @template T of object
      * @param class-string<T> $id
-     * @param class-string<Builder<T>>|callable(self): T $value
+     * @param class-string<Builder<T>>|callable(static): T $value
      */
     public function set(string $id, callable|string $value): void
     {
@@ -103,7 +103,7 @@ class Container implements ContainerInterface
      * Register a factory or builder for a non-class service ID (e.g., 'app.locator').
      *
      * @param non-empty-string $id
-     * @param class-string<Builder<object>>|callable(self): object $value
+     * @param class-string<Builder<object>>|callable(static): object $value
      */
     public function bind(string $id, callable|string $value): void
     {
