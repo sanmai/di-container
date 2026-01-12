@@ -94,21 +94,27 @@ For setting dependencies on the fly, there's a handy `set()` method that accepts
 
 ## Non-Class Service IDs
 
-For non-class service IDs (e.g., `'app.repository'`), use the `bind()` method:
+For non-class service IDs (e.g., `'app.repository'`), use the `bind()` method or the `$bindings` constructor parameter:
 
 ```php
-$container = new Container();
-
 // Register with a dotted ID - type validation is skipped
-$container->bind('app.repository', fn() => new CachedRepository(new DatabaseRepository()));
+$container = new Container(
+    values: [
+        LoggerInterface::class => FileLogger::class,
+    ],
+    bindings: [
+        'app.repository' => fn() => new CachedRepository(new DatabaseRepository()),
+        'app.cache' => CacheBuilder::class,
+    ]
+);
 
-// Builder classes work too
-$container->bind('app.cache', CacheBuilder::class);
+// Or add bindings on the fly
+$container->bind('app.mailer', fn() => new SmtpMailer());
 
 $repository = $container->get('app.repository');
 ```
 
-The `bind()` method accepts both callables and builder class names, just like `set()`, but without class-string type constraints on the service ID.
+The `bind()` method and `$bindings` parameter accept both callables and builder class names, just like `set()`, but without class-string type constraints on the service ID.
 
 ## Design Philosophy
 
