@@ -104,6 +104,7 @@ $container = new Container(
     ],
     bindings: [
         'app.repository' => fn() => new CachedRepository(new DatabaseRepository()),
+        // Builder classes work too
         'app.cache' => CacheBuilder::class,
     ]
 );
