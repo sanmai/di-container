@@ -257,6 +257,14 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(SimpleObject::class, $container->get('app.service'));
     }
 
+    public function testBindMethodWithBuilder(): void
+    {
+        $container = new Container();
+        $container->bind('app.complex', ComplexObjectBuilder::class);
+
+        $this->assertInstanceOf(ComplexObject::class, $container->get('app.complex'));
+    }
+
     public function testItInjectsItself(): void
     {
         $container = new Container();
