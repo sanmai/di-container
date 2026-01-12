@@ -112,7 +112,7 @@ $container = new Container(
 $container->bind('app.mailer', fn() => new MyMailer());
 
 // Builder classes work too
-$container->bind('app.cache', CacheBuilder::class);
+$container->bind('app.session', SessionBuilder::class);
 
 $repository = $container->get('app.repository');
 ```
