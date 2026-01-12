@@ -94,18 +94,30 @@ For setting dependencies on the fly, there's a handy `set()` method that accepts
 
 ## Non-Class Service IDs
 
-By default, the container validates that factories return instances matching their registered class names. To bypass this validation (e.g., for the decorator pattern), use a non-class string as the service ID:
+For non-class service IDs (e.g., `'app.repository'`), use the `bind()` method or the `$bindings` constructor parameter:
 
 ```php
-$container = new Container([
-    // Type validation is skipped for IDs that don't look like namespaced class names
-    'app.repository' => fn() => new CachedRepository(new DatabaseRepository()),
-]);
+// Register with a dotted ID - type validation is skipped
+$container = new Container(
+    values: [
+        LoggerInterface::class => FileLogger::class,
+    ],
+    bindings: [
+        'app.repository' => fn() => new CachedRepository(new DatabaseRepository()),
+        'app.cache' => CacheBuilder::class,
+    ]
+);
+
+// Or add bindings on the fly
+$container->bind('app.mailer', fn() => new MyMailer());
+
+// Builder classes work too
+$container->bind('app.session', SessionBuilder::class);
 
 $repository = $container->get('app.repository');
 ```
 
-The container skips type validation when the service ID contains a dot or lacks a namespace separator.
+The `bind()` method and `$bindings` parameter accept both callables and builder class names, just like `set()`, but without class-string type constraints on the service ID.
 
 ## Design Philosophy
 

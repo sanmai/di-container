@@ -71,22 +71,41 @@ class Container implements ContainerInterface
     private array $builders = [];
 
     /**
-     * @param iterable<class-string<object>|non-empty-string, callable|class-string<Builder<object>>> $values
+     * @param iterable<class-string<object>, callable|class-string<Builder<object>>> $values
+     * @param iterable<non-empty-string, callable|class-string<Builder<object>>> $bindings
      */
-    public function __construct(iterable $values = [])
+    public function __construct(iterable $values = [], iterable $bindings = [])
     {
         $this->values[ContainerInterface::class] = $this;
 
         foreach ($values as $id => $value) {
             $this->set($id, $value);
         }
+
+        foreach ($bindings as $id => $binding) {
+            $this->bind($id, $binding);
+        }
     }
 
     /**
-     * @param class-string<object>|non-empty-string $id
-     * @param class-string<Builder<object>>|callable(self): object $value
+     * Register a factory or builder for a class-based service ID.
+     *
+     * @template T of object
+     * @param class-string<T> $id
+     * @param class-string<Builder<T>>|callable(self): T $value
      */
     public function set(string $id, callable|string $value): void
+    {
+        $this->bind($id, $value);
+    }
+
+    /**
+     * Register a factory or builder for a non-class service ID (e.g., 'app.locator').
+     *
+     * @param non-empty-string $id
+     * @param class-string<Builder<object>>|callable(self): object $value
+     */
+    public function bind(string $id, callable|string $value): void
     {
         unset($this->values[$id]);
 
