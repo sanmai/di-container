@@ -38,5 +38,6 @@ namespace Tests\DIContainer\Fixtures;
 
 class VariadicConstructor
 {
+    /** @param mixed $inputs */
     public function __construct(...$inputs) {}
 }
