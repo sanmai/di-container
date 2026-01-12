@@ -47,6 +47,7 @@ use Tests\DIContainer\Fixtures\ComplexDepender;
 use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
 use Tests\DIContainer\Fixtures\DependentObject;
+use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
 use Tests\DIContainer\Fixtures\SimpleObject;
@@ -295,5 +296,17 @@ class ContainerTest extends TestCase
 
         $this->assertSame($custom, $container->get(Container::class));
         $this->assertSame($container, $container->get(ContainerInterface::class));
+    }
+
+    public function testSubclassCanUseCallableWithStaticType(): void
+    {
+        $container = new ExtendedContainer();
+
+        $result = $container->withService(
+            SimpleObject::class,
+            static fn(ExtendedContainer $c) => new SimpleObject()
+        );
+
+        $this->assertInstanceOf(SimpleObject::class, $result->get(SimpleObject::class));
     }
 }
