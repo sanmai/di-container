@@ -104,11 +104,12 @@ $container = new Container(
     ],
     bindings: [
         'app.repository' => fn() => new CachedRepository(new DatabaseRepository()),
+        'app.cache' => CacheBuilder::class,
     ]
 );
 
 // Or add bindings on the fly
-$container->bind('app.mailer', fn() => new SmtpMailer());
+$container->bind('app.mailer', fn() => new MyMailer());
 
 // Builder classes work too
 $container->bind('app.cache', CacheBuilder::class);
