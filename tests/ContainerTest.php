@@ -240,9 +240,8 @@ class ContainerTest extends TestCase
 
     public function testItSkipsTypeCheckForDottedIds(): void
     {
-        $container = new Container([
-            'app.locator' => static fn() => new SimpleObject(),
-        ]);
+        $container = new Container();
+        $container->bind('app.locator', static fn() => new SimpleObject());
 
         $object = $container->get('app.locator');
 
