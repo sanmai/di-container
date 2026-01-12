@@ -56,22 +56,22 @@ use function str_contains;
 class Container implements ContainerInterface
 {
     /**
-     * @var array<class-string<object>, object>
+     * @var array<class-string<object>|non-empty-string, object>
      */
     private array $values = [];
 
     /**
-     * @var array<class-string<object>, callable>
+     * @var array<class-string<object>|non-empty-string, callable>
      */
     private array $factories = [];
 
     /**
-     * @var array<class-string<object>, class-string<Builder<object>>>
+     * @var array<class-string<object>|non-empty-string, class-string<Builder<object>>>
      */
     private array $builders = [];
 
     /**
-     * @param iterable<class-string<object>, callable|class-string<Builder<object>>> $values
+     * @param iterable<class-string<object>|non-empty-string, callable|class-string<Builder<object>>> $values
      */
     public function __construct(iterable $values = [])
     {
@@ -83,7 +83,7 @@ class Container implements ContainerInterface
     }
 
     /**
-     * @param class-string<object> $id
+     * @param class-string<object>|non-empty-string $id
      * @param class-string<Builder<object>>|callable(self): object $value
      */
     public function set(string $id, callable|string $value): void
@@ -248,6 +248,7 @@ class Container implements ContainerInterface
      */
     private function providersForType(string $type): array
     {
+        // @phpstan-ignore return.type (is_a() filter guarantees class-strings, but PHPStan can't narrow this)
         return take($this->factories, $this->builders)
             ->keys()
             ->filter(static fn(string $id) => is_a($id, $type, true))
