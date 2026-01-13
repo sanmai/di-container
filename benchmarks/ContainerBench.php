@@ -41,6 +41,7 @@ namespace Benchmarks\DIContainer;
 use Benchmarks\DIContainer\Fixtures\A\FixtureA1;
 use Benchmarks\DIContainer\Fixtures\A\FixtureA100;
 use Benchmarks\DIContainer\Fixtures\C\FixtureC500;
+use Benchmarks\DIContainer\Fixtures\D\FixtureA1Builder;
 use DIContainer\Container;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
@@ -66,7 +67,7 @@ class ContainerBench
      * Measures: Singleton cache retrieval cost.
      */
     #[Warmup(1)]
-    #[Revs(250)]
+    #[Revs(50)]
     #[Iterations(3)]
     public function benchLinearChainCached(): void
     {
@@ -108,6 +109,21 @@ class ContainerBench
     {
         $container = new Container();
         $container->get(FixtureC500::class);
+    }
+
+    /**
+     * Benchmark: Builder with 50 parallel dependencies.
+     * Measures: Builder resolution path + broad dependency autowiring.
+     */
+    #[Warmup(1)]
+    #[Revs(50)]
+    #[Iterations(3)]
+    public function benchBuilder(): void
+    {
+        $container = new Container([
+            FixtureA1::class => FixtureA1Builder::class,
+        ]);
+        $container->get(FixtureA1::class);
     }
 
     /**

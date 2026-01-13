@@ -140,4 +140,48 @@ for ($i = 2; $i <= 500; $i++) {
     file_put_contents($fixtureDir . "/C/FixtureC{$i}.php", $data);
 }
 
+// Fixture D: Builder with 50 parallel dependencies
+echo "Generating Fixture D (builder with 50 parallel dependencies)...\n";
+
+@mkdir($fixtureDir . '/D', 0755, true);
+
+$uses = '';
+$params = '';
+for ($i = 1; $i <= 50; $i++) {
+    $uses .= "use Benchmarks\\DIContainer\\Fixtures\\A\\FixtureA{$i};\n";
+    $params .= "        private FixtureA{$i} \$dependency{$i},\n";
+}
+$uses = rtrim($uses);
+$params = rtrim($params, ",\n");
+
+$data = <<<EOF
+    <?php
+
+    declare(strict_types=1);
+
+    namespace Benchmarks\DIContainer\Fixtures\D;
+
+    {$uses}
+    use DIContainer\Builder;
+
+    /**
+     * Builder with 50 parallel dependencies (FixtureA1..FixtureA50).
+     * Each FixtureAN has a chain of N classes, testing broad dependency resolution.
+     *
+     * @implements Builder<FixtureA1>
+     */
+    class FixtureA1Builder implements Builder
+    {
+        public function __construct(
+    {$params},
+        ) {}
+
+        public function build(): FixtureA1
+        {
+            return new FixtureA1();
+        }
+    }
+    EOF;
+file_put_contents($fixtureDir . '/D/FixtureA1Builder.php', $data);
+
 echo "Done! Generated fixtures in {$fixtureDir}\n";
