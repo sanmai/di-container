@@ -284,6 +284,10 @@ class Container implements ContainerInterface
             return true;
         }
 
+        if (array_key_exists($id, $this->builders)) {
+            return true;
+        }
+
         // Very pessimistic; could probably try to create it.
         return false;
     }
