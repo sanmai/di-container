@@ -1,4 +1,4 @@
-## Container Resolution Paths
+### Container Resolution Paths
 
 When `$container->get($id)` is called, resolution follows this order:
 
@@ -9,7 +9,7 @@ When `$container->get($id)` is called, resolution follows this order:
 | Factory | `$this->factories[$id]($this)` | Factory closure registered |
 | Autowiring | `createService($id)` | Reflect class, resolve dependencies |
 
-## Benchmark Coverage
+### Benchmark Coverage
 
 | Benchmark | Path | Scenario |
 |-----------|------|----------|
