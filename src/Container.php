@@ -80,7 +80,6 @@ class Container implements ContainerInterface
     public function __construct(iterable $values = [], iterable $bindings = [])
     {
         $this->values[ContainerInterface::class] = $this;
-        $this->values[static::class] = $this;
 
         foreach ($values as $id => $value) {
             $this->set($id, $value);
@@ -266,6 +265,13 @@ class Container implements ContainerInterface
 
         // Special type names (self, static, parent) cannot be resolved for closures
         if (in_array($paramTypeName, ['self', 'static', 'parent'], true)) {
+            return;
+        }
+
+        // If requesting the container itself, return $this
+        if ($this instanceof $paramTypeName) {
+            yield $this;
+
             return;
         }
 
