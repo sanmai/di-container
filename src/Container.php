@@ -232,7 +232,7 @@ class Container implements ContainerInterface
             ->toList();
 
         if (count($args) !== count($params)) {
-            throw new Exception('Could not resolve all factory parameters');
+            return null;
         }
 
         /** @var object */
