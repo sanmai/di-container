@@ -140,14 +140,14 @@ for ($i = 2; $i <= 500; $i++) {
     file_put_contents($fixtureDir . "/C/FixtureC{$i}.php", $data);
 }
 
-// Fixture D: Builder with 20 parallel dependencies
-echo "Generating Fixture D (builder with 20 parallel dependencies)...\n";
+// Fixture D: Builder with 5 parallel dependencies
+echo "Generating Fixture D (builder with 5 parallel dependencies)...\n";
 
 @mkdir($fixtureDir . '/D', 0755, true);
 
 $uses = '';
 $params = '';
-for ($i = 1; $i <= 20; $i++) {
+for ($i = 1; $i <= 5; $i++) {
     $uses .= "use Benchmarks\\DIContainer\\Fixtures\\A\\FixtureA{$i};\n";
     $params .= "        private FixtureA{$i} \$dependency{$i},\n";
 }
@@ -165,7 +165,7 @@ $data = <<<EOF
     use DIContainer\Builder;
 
     /**
-     * Builder with 20 parallel dependencies (FixtureA1..FixtureA20).
+     * Builder with 5 parallel dependencies (FixtureA1..FixtureA5).
      * Each FixtureAN has a chain of N classes, testing broad dependency resolution.
      *
      * @implements Builder<FixtureA1>
