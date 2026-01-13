@@ -319,7 +319,7 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
     }
 
-    public function testFactoryWithContainerOnSelfType(): void
+    public function testFactorySelfType(): void
     {
         $container = new ExtendedContainer();
         $result = $container->withSelfFactory();
