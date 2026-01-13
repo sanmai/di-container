@@ -102,6 +102,20 @@ cs: test-prerequisites
 	$(SILENT) $(PHP) $(PHP_CS_FIXER) $(PHP_CS_FIXER_ARGS) --diff fix
 
 ##############################################################
+# Benchmarking                                               #
+##############################################################
+
+PHPBENCH=vendor/bin/phpbench
+
+.PHONY: benchmark
+benchmark: prerequisites benchmarks/Fixtures/A/FixtureA1.php
+	$(PHP) $(PHPBENCH) run
+
+benchmarks/Fixtures/A/FixtureA1.php:
+	$(PHP) benchmarks/generate-fixtures.php
+	$(COMPOSER) dump-autoload --optimize --dev
+
+##############################################################
 # Prerequisites Setup                                        #
 ##############################################################
 

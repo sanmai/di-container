@@ -34,6 +34,7 @@
         "friendsofphp/php-cs-fixer": "^3.17",
         "infection/infection": ">=0.29",
         "php-coveralls/php-coveralls": "^2.4.1",
+        "phpbench/phpbench": "^1.4",
         "phpstan/extension-installer": "^1.4",
         "phpunit/phpunit": "^11.5.25",
         "sanmai/phpstan-rules": "^0.3.10"
@@ -45,6 +46,7 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "Benchmarks\\DIContainer\\": "benchmarks/",
             "Tests\\DIContainer\\": "tests/"
         }
     },
