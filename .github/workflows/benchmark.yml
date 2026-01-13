@@ -55,11 +55,9 @@ jobs:
       - name: Run benchmarks
         id: benchmark
         run: |
-          {
-            echo 'results<<EOF'
-            make benchmark GITHUB_OUTPUT=/dev/stdout
-            echo 'EOF'
-          } >> $GITHUB_OUTPUT
+          echo 'results<<EOF' >> $GITHUB_OUTPUT
+          make benchmark GITHUB_OUTPUT=$GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Read benchmark documentation
         id: docs
