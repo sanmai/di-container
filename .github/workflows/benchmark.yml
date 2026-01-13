@@ -21,6 +21,9 @@ on:
       - 'phpbench.json'
       - 'composer.json'
 
+permissions:
+  pull-requests: write
+
 jobs:
   benchmark:
     name: Benchmark
@@ -58,7 +61,7 @@ jobs:
         id: benchmark
         run: |
           echo 'results<<EOF' >> $GITHUB_OUTPUT
-          make benchmark >> $GITHUB_OUTPUT
+          make benchmark GITHUB_OUTPUT=$GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Comment on PR
@@ -69,6 +72,4 @@ jobs:
           message: |
             ## Benchmark Results
 
-            ```
             ${{ steps.benchmark.outputs.results }}
-            ```
