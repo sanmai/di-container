@@ -4,6 +4,8 @@
 /*.xml.*              export-ignore
 /tests                export-ignore
 /*.toml               export-ignore
+/phpbench.json        export-ignore
+/benchmarks           export-ignore
 
 # Test with:
 # git archive --format=tar HEAD | tar t
