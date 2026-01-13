@@ -13,6 +13,7 @@ composer require sanmai/di-container
 ## Features
 
 - Automatically resolves class dependencies through reflection
+- Factory parameters are autowired just like constructor parameters
 - Objects are created once and reused
 - Resolve interfaces to concrete implementations
 
@@ -26,14 +27,13 @@ $container = new Container();
 // Automatic resolution - no configuration needed
 $service = $container->get(YourService::class);
 
-// Use builder objects for complex construction, or construct the dependencies directly - your choice
+// Factory parameters are autowired - no need to call $container->get()
 $container = new Container([
-    ComplexObject::class => fn(Container $container) => new ComplexObject(
-        $container->get(LoggerInterface::class),
-        $container->get(AnotherProvider::class)->getValue()
+    ComplexObject::class => fn(LoggerInterface $logger, AnotherProvider $provider) => new ComplexObject(
+        $logger,
+        $provider->getValue()
     ),
-    DatabaseInterface::class => fn(Container $container) =>
-        $container->get(DatabaseBuilder::class)->build(),
+    DatabaseInterface::class => DatabaseBuilder::class,
 ]);
 
 // Set additional dependencies on the fly
@@ -145,4 +145,16 @@ make -j -k
 make benchmark
 ```
 
-Runs [PHPBench](https://phpbench.readthedocs.io/) with OPcache and JIT enabled. Benchmarks cover autowiring chains of 100-500 classes, singleton cache hits, and bulk instantiation.
+Runs [PHPBench](https://phpbench.readthedocs.io/) with OPcache and JIT enabled.
+
+| Benchmark | Description | Time |
+|-----------|-------------|------|
+| LinearChainCold | Create container + resolve 100-class chain | 203μs |
+| LinearChainWarm | Resolve 100-class chain (first resolution) | 2.9μs |
+| LinearChainCached | Re-fetch already-resolved chain | 1.3μs |
+| IndependentClassesCold | Create container + 100 independent classes | 40μs |
+| DeepChainCold | Create container + 500-class chain | 1.1ms |
+| FactoryNoParams | Factory with no parameters | 4.9μs |
+| FactoryWithContainer | Factory with Container parameter | 13.6μs |
+| FactoryAutowired | Factory with autowired parameter | 15.1μs |
+| FactoryAutowiredChain | Factory autowiring 100-class chain | 217μs |
