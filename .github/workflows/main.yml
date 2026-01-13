@@ -80,7 +80,6 @@ jobs:
 
     env:
       PHP_VERSION: '8.3'
-      COMPOSER_ROOT_VERSION: '0.1'
 
     steps:
       - name: Checkout code
