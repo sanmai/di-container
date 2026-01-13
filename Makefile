@@ -111,7 +111,7 @@ GITHUB_OUTPUT ?= /dev/stdout
 
 .PHONY: benchmark
 benchmark: prerequisites benchmarks/Fixtures/A/FixtureA1.php
-	$(SILENT) $(PHP) $(PHPBENCH) run --progress=none --report=aggregate --output=markdown >> $(GITHUB_OUTPUT)
+	$(SILENT) $(PHP) $(PHPBENCH) run --progress=none --report=aggregate >> $(GITHUB_OUTPUT)
 
 benchmarks/Fixtures/A/FixtureA1.php:
 	$(SILENT) $(PHP) benchmarks/generate-fixtures.php

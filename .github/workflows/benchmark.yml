@@ -72,4 +72,6 @@ jobs:
           message: |
             ## Benchmark Results
 
+            ```
             ${{ steps.benchmark.outputs.results }}
+            ```
