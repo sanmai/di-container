@@ -112,7 +112,7 @@ class ContainerBench
     }
 
     /**
-     * Benchmark: Builder with 5 parallel dependencies.
+     * Benchmark: Builder with 20 parallel dependencies.
      * Measures: Builder resolution path + broad dependency autowiring.
      */
     #[Warmup(1)]
