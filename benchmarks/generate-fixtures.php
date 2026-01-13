@@ -140,16 +140,16 @@ for ($i = 2; $i <= 500; $i++) {
     file_put_contents($fixtureDir . "/C/FixtureC{$i}.php", $data);
 }
 
-// Fixture D: Builder with 20 parallel dependencies
+// Fixture D: Builder with 20 parallel dependencies (using independent B fixtures)
 echo "Generating Fixture D (builder with 20 parallel dependencies)...\n";
 
 @mkdir($fixtureDir . '/D', 0755, true);
 
 $uses = '';
 $params = '';
-for ($i = 2; $i <= 21; $i++) {
-    $uses .= "use Benchmarks\\DIContainer\\Fixtures\\A\\FixtureA{$i};\n";
-    $params .= "        private FixtureA{$i} \$dependency{$i},\n";
+for ($i = 1; $i <= 20; $i++) {
+    $uses .= "use Benchmarks\\DIContainer\\Fixtures\\B\\FixtureB{$i};\n";
+    $params .= "        private FixtureB{$i} \$dependency{$i},\n";
 }
 $uses = rtrim($uses);
 $params = rtrim($params, ",\n");
@@ -161,12 +161,13 @@ $data = <<<EOF
 
     namespace Benchmarks\DIContainer\Fixtures\D;
 
+    use Benchmarks\DIContainer\Fixtures\A\FixtureA1;
     {$uses}
     use DIContainer\Builder;
 
     /**
-     * Builder with 20 parallel dependencies (FixtureA2..FixtureA21).
-     * Each FixtureAN has a chain of N classes, testing broad dependency resolution.
+     * Builder with 20 parallel dependencies (FixtureB1..FixtureB20).
+     * Uses independent B fixtures to avoid circular dependencies.
      *
      * @implements Builder<FixtureA1>
      */
