@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace Benchmarks\DIContainer;
 
+use Benchmarks\DIContainer\Fixtures\A\FixtureA1;
 use Benchmarks\DIContainer\Fixtures\A\FixtureA100;
 use Benchmarks\DIContainer\Fixtures\C\FixtureC500;
 use DIContainer\Container;
@@ -59,9 +60,9 @@ class ContainerBench
      * Benchmark: Create container + resolve 100-class linear dependency chain.
      * Measures: Container setup + full autowiring cost.
      */
-    #[Warmup(3)]
+    #[Warmup(1)]
     #[Revs(100)]
-    #[Iterations(5)]
+    #[Iterations(3)]
     public function benchLinearChainCold(): void
     {
         $container = new Container();
@@ -72,9 +73,9 @@ class ContainerBench
      * Benchmark: Resolve 100-class chain from existing container (first resolution).
      * Measures: Pure autowiring/reflection cost without container setup.
      */
-    #[Warmup(3)]
+    #[Warmup(1)]
     #[Revs(100)]
-    #[Iterations(5)]
+    #[Iterations(3)]
     #[BeforeMethods('setUp')]
     public function benchLinearChainWarm(): void
     {
@@ -85,9 +86,9 @@ class ContainerBench
      * Benchmark: Re-fetch already-resolved 100-class chain.
      * Measures: Singleton cache retrieval cost.
      */
-    #[Warmup(3)]
-    #[Revs(1000)]
-    #[Iterations(5)]
+    #[Warmup(1)]
+    #[Revs(500)]
+    #[Iterations(3)]
     public function benchLinearChainCached(): void
     {
         static $container = null;
@@ -104,9 +105,9 @@ class ContainerBench
      * Benchmark: Create container + instantiate 100 independent classes.
      * Measures: Bulk instantiation throughput for simple classes.
      */
-    #[Warmup(3)]
+    #[Warmup(1)]
     #[Revs(10)]
-    #[Iterations(5)]
+    #[Iterations(3)]
     public function benchIndependentClassesCold(): void
     {
         $container = new Container();
@@ -121,9 +122,9 @@ class ContainerBench
      * Benchmark: Instantiate 100 independent classes from existing container.
      * Measures: Pure instantiation cost for no-dependency classes.
      */
-    #[Warmup(3)]
+    #[Warmup(1)]
     #[Revs(10)]
-    #[Iterations(5)]
+    #[Iterations(3)]
     #[BeforeMethods('setUp')]
     public function benchIndependentClassesWarm(): void
     {
@@ -137,9 +138,9 @@ class ContainerBench
      * Benchmark: Create container + resolve 500-class deep dependency chain.
      * Measures: Performance with deep recursion (stress test).
      */
-    #[Warmup(3)]
+    #[Warmup(1)]
     #[Revs(10)]
-    #[Iterations(5)]
+    #[Iterations(3)]
     public function benchDeepChainCold(): void
     {
         $container = new Container();
@@ -150,12 +151,42 @@ class ContainerBench
      * Benchmark: Resolve 500-class chain from existing container.
      * Measures: Deep autowiring cost.
      */
-    #[Warmup(3)]
+    #[Warmup(1)]
     #[Revs(10)]
-    #[Iterations(5)]
+    #[Iterations(3)]
     #[BeforeMethods('setUp')]
     public function benchDeepChainWarm(): void
     {
         $this->container->get(FixtureC500::class);
+    }
+
+    /**
+     * Benchmark: Factory invocation with no parameters.
+     * Measures: Minimal factory overhead.
+     */
+    #[Warmup(1)]
+    #[Revs(500)]
+    #[Iterations(3)]
+    public function benchFactoryNoParams(): void
+    {
+        $container = new Container([
+            FixtureA1::class => static fn() => new FixtureA1(),
+        ]);
+        $container->get(FixtureA1::class);
+    }
+
+    /**
+     * Benchmark: Factory invocation with container parameter.
+     * Measures: Factory overhead with explicit container access.
+     */
+    #[Warmup(1)]
+    #[Revs(500)]
+    #[Iterations(3)]
+    public function benchFactoryWithContainer(): void
+    {
+        $container = new Container([
+            FixtureA1::class => static fn(Container $c) => new FixtureA1(),
+        ]);
+        $container->get(FixtureA1::class);
     }
 }
