@@ -111,7 +111,7 @@ GITHUB_OUTPUT ?= /dev/stdout
 
 .PHONY: benchmark
 benchmark: prerequisites benchmarks/Fixtures/A/FixtureA1.php
-	$(SILENT) $(PHP) $(PHPBENCH) run --progress=none --report=aggregate | sed 's/+/|/g; 1d; $$d' | sed '3,$$ { /^|[-| ]*|$$/d; }' >> $(GITHUB_OUTPUT)
+	$(SILENT) $(PHP) $(PHPBENCH) run --progress=none --report=aggregate | sed 's/+/|/g; 1d; $$d' | sed '3,$$ { /^|[-| ]*|$$/d; }' | tee -a $(GITHUB_OUTPUT)
 
 benchmarks/Fixtures/A/FixtureA1.php:
 	$(SILENT) $(PHP) benchmarks/generate-fixtures.php
