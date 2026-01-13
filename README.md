@@ -147,14 +147,3 @@ make benchmark
 
 Runs [PHPBench](https://phpbench.readthedocs.io/) with OPcache and JIT enabled.
 
-| Benchmark | Description | Time |
-|-----------|-------------|------|
-| LinearChainCold | Create container + resolve 100-class chain | 203μs |
-| LinearChainWarm | Resolve 100-class chain (first resolution) | 2.9μs |
-| LinearChainCached | Re-fetch already-resolved chain | 1.3μs |
-| IndependentClassesCold | Create container + 100 independent classes | 40μs |
-| DeepChainCold | Create container + 500-class chain | 1.1ms |
-| FactoryNoParams | Factory with no parameters | 4.9μs |
-| FactoryWithContainer | Factory with Container parameter | 13.6μs |
-| FactoryAutowired | Factory with autowired parameter | 15.1μs |
-| FactoryAutowiredChain | Factory autowiring 100-class chain | 217μs |
