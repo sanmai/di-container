@@ -59,8 +59,14 @@ jobs:
           make benchmark GITHUB_OUTPUT=$GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
 
+      - name: Read benchmark documentation
+        id: docs
+        run: |
+          echo 'readme<<EOF' >> $GITHUB_OUTPUT
+          cat benchmarks/README.md >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
       - name: Comment on PR
-        if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: benchmark
@@ -68,3 +74,5 @@ jobs:
             ## Benchmark Results
 
             ${{ steps.benchmark.outputs.results }}
+
+            ${{ steps.docs.outputs.readme }}

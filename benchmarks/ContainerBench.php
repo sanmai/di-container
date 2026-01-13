@@ -41,21 +41,14 @@ namespace Benchmarks\DIContainer;
 use Benchmarks\DIContainer\Fixtures\A\FixtureA1;
 use Benchmarks\DIContainer\Fixtures\A\FixtureA100;
 use Benchmarks\DIContainer\Fixtures\C\FixtureC500;
+use Benchmarks\DIContainer\Fixtures\D\FixtureA1Builder;
 use DIContainer\Container;
-use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 use PhpBench\Attributes\Warmup;
 
 class ContainerBench
 {
-    private Container $container;
-
-    public function setUp(): void
-    {
-        $this->container = new Container();
-    }
-
     /**
      * Benchmark: Create container + resolve 100-class linear dependency chain.
      * Measures: Container setup + full autowiring cost.
@@ -70,24 +63,11 @@ class ContainerBench
     }
 
     /**
-     * Benchmark: Resolve 100-class chain from existing container (first resolution).
-     * Measures: Pure autowiring/reflection cost without container setup.
-     */
-    #[Warmup(1)]
-    #[Revs(50)]
-    #[Iterations(3)]
-    #[BeforeMethods('setUp')]
-    public function benchLinearChainWarm(): void
-    {
-        $this->container->get(FixtureA100::class);
-    }
-
-    /**
      * Benchmark: Re-fetch already-resolved 100-class chain.
      * Measures: Singleton cache retrieval cost.
      */
     #[Warmup(1)]
-    #[Revs(250)]
+    #[Revs(50)]
     #[Iterations(3)]
     public function benchLinearChainCached(): void
     {
@@ -119,22 +99,6 @@ class ContainerBench
     }
 
     /**
-     * Benchmark: Instantiate 100 independent classes from existing container.
-     * Measures: Pure instantiation cost for no-dependency classes.
-     */
-    #[Warmup(1)]
-    #[Revs(5)]
-    #[Iterations(3)]
-    #[BeforeMethods('setUp')]
-    public function benchIndependentClassesWarm(): void
-    {
-        for ($i = 1; $i <= 100; $i++) {
-            $class = "Benchmarks\\DIContainer\\Fixtures\\B\\FixtureB{$i}";
-            $this->container->get($class);
-        }
-    }
-
-    /**
      * Benchmark: Create container + resolve 500-class deep dependency chain.
      * Measures: Performance with deep recursion (stress test).
      */
@@ -148,16 +112,18 @@ class ContainerBench
     }
 
     /**
-     * Benchmark: Resolve 500-class chain from existing container.
-     * Measures: Deep autowiring cost.
+     * Benchmark: Builder with 20 parallel dependencies.
+     * Measures: Builder resolution path + broad dependency autowiring.
      */
     #[Warmup(1)]
-    #[Revs(5)]
+    #[Revs(50)]
     #[Iterations(3)]
-    #[BeforeMethods('setUp')]
-    public function benchDeepChainWarm(): void
+    public function benchBuilder(): void
     {
-        $this->container->get(FixtureC500::class);
+        $container = new Container([
+            FixtureA1::class => FixtureA1Builder::class,
+        ]);
+        $container->get(FixtureA1::class);
     }
 
     /**

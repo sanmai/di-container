@@ -146,4 +146,3 @@ make benchmark
 ```
 
 Runs [PHPBench](https://phpbench.readthedocs.io/) with OPcache and JIT enabled.
-
