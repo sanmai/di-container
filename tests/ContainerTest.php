@@ -189,6 +189,8 @@ class ContainerTest extends TestCase
             NamedObjectInterface::class => ComplexObjectBuilder::class,
         ]);
 
+        $this->assertTrue($container->has(NamedObjectInterface::class));
+
         $object = $container->get(NamedObjectInterface::class);
 
         $this->assertSame('hello', $object->getName());
