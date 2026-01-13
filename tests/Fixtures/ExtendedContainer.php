@@ -51,4 +51,12 @@ class ExtendedContainer extends Container
 
         return $clone;
     }
+
+    public function withSelfFactory(): static
+    {
+        $clone = clone $this;
+        $clone->set(SimpleObject::class, static fn(self $c) => new SimpleObject());
+
+        return $clone;
+    }
 }
