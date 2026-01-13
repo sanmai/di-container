@@ -32,7 +32,7 @@
     "require-dev": {
         "ergebnis/composer-normalize": "^2.8",
         "friendsofphp/php-cs-fixer": "^3.17",
-        "infection/infection": ">=0.29",
+        "infection/infection": ">=0.31",
         "php-coveralls/php-coveralls": "^2.4.1",
         "phpbench/phpbench": "^1.4",
         "phpstan/extension-installer": "^1.4",
@@ -59,6 +59,9 @@
         "optimize-autoloader": true
     },
     "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        },
         "preferred-install": "dist"
     }
 }

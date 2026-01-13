@@ -54,6 +54,7 @@ use function Pipeline\take;
 use function reset;
 use function sprintf;
 use function str_contains;
+use function in_array;
 
 class Container implements ContainerInterface
 {
@@ -222,17 +223,14 @@ class Container implements ContainerInterface
         $reflection = new ReflectionFunction(Closure::fromCallable($factory));
         $params = $reflection->getParameters();
 
-        if ([] === $params) {
-            /** @var object */
-            return $factory();
-        }
-
         $args = take($params)
             ->map($this->resolveParameter(...))
             ->toList();
 
+        // Fall back to passing container for backward compatibility
         if (count($args) !== count($params)) {
-            return null;
+            /** @var object */
+            return $factory($this);
         }
 
         /** @var object */
@@ -264,8 +262,14 @@ class Container implements ContainerInterface
             return;
         }
 
-        /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
+
+        // Special type names (self, static, parent) cannot be resolved for closures
+        if (in_array($paramTypeName, ['self', 'static', 'parent'], true)) {
+            return;
+        }
+
+        /** @var class-string $paramTypeName */
 
         // Found an instantiable class, done
         if ((new ReflectionClass($paramTypeName))->isInstantiable()) {

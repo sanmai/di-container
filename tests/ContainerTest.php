@@ -329,4 +329,13 @@ class ContainerTest extends TestCase
 
         $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
     }
+
+    public function testFactoryFallsBackToContainerOnSelfType(): void
+    {
+        // When factory has 'self' type, it can't be resolved, so falls back to passing container
+        $container = new ExtendedContainer();
+        $result = $container->withSelfFactory();
+
+        $this->assertInstanceOf(SimpleObject::class, $result->get(SimpleObject::class));
+    }
 }
