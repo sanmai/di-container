@@ -51,5 +51,20 @@ jobs:
           composer update --prefer-dist --no-interaction --no-progress
 
       - name: Run benchmarks
+        id: benchmark
         run: |
-          make benchmark
+          echo 'results<<EOF' >> $GITHUB_OUTPUT
+          make benchmark >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: benchmark
+          message: |
+            ## Benchmark Results
+
+            ```
+            ${{ steps.benchmark.outputs.results }}
+            ```
