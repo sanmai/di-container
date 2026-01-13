@@ -1,0 +1,55 @@
+# yamllint disable rule:line-length
+name: Benchmark
+
+on:
+  pull_request:
+    paths:
+      - '**.php'
+      - '.github/workflows/benchmark.yml'
+      - 'phpbench.json'
+      - 'composer.json'
+  push:
+    branches:
+      - main
+    paths:
+      - '**.php'
+      - '.github/workflows/benchmark.yml'
+      - 'phpbench.json'
+      - 'composer.json'
+
+jobs:
+  benchmark:
+    name: Benchmark
+    runs-on: ubuntu-latest
+
+    env:
+      PHP_VERSION: '8.4'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          ini-values: opcache.enable_cli=1, opcache.jit=tracing, opcache.jit_buffer_size=64M
+          tools: composer:v2
+
+      - name: Cache dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ env.PHP_VERSION }}-${{ hashFiles('composer.*') }}
+          restore-keys: |
+            composer-${{ env.PHP_VERSION }}-
+            composer-
+
+      - name: Install dependencies
+        run: |
+          composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Run benchmarks
+        run: |
+          make benchmark
