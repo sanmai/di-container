@@ -55,7 +55,10 @@ jobs:
 
       - name: Install dependencies
         run: |
+          composer remove --no-update --dev \
+              phpstan/phpstan infection/infection friendsofphp/php-cs-fixer
           composer update --prefer-dist --no-interaction --no-progress
+          composer dump-autoload --optimize --dev
 
       - name: Run benchmarks
         id: benchmark
