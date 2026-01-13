@@ -109,7 +109,7 @@ PHPBENCH=vendor/bin/phpbench
 
 .PHONY: benchmark
 benchmark: prerequisites benchmarks/Fixtures/A/FixtureA1.php
-	$(PHP) $(PHPBENCH) run
+	$(PHP) $(PHPBENCH) run --progress=none --report=aggregate
 
 benchmarks/Fixtures/A/FixtureA1.php:
 	$(PHP) benchmarks/generate-fixtures.php

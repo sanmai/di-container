@@ -61,7 +61,7 @@ class ContainerBench
      * Measures: Container setup + full autowiring cost.
      */
     #[Warmup(1)]
-    #[Revs(100)]
+    #[Revs(50)]
     #[Iterations(3)]
     public function benchLinearChainCold(): void
     {
@@ -74,7 +74,7 @@ class ContainerBench
      * Measures: Pure autowiring/reflection cost without container setup.
      */
     #[Warmup(1)]
-    #[Revs(100)]
+    #[Revs(50)]
     #[Iterations(3)]
     #[BeforeMethods('setUp')]
     public function benchLinearChainWarm(): void
@@ -87,7 +87,7 @@ class ContainerBench
      * Measures: Singleton cache retrieval cost.
      */
     #[Warmup(1)]
-    #[Revs(500)]
+    #[Revs(250)]
     #[Iterations(3)]
     public function benchLinearChainCached(): void
     {
@@ -106,7 +106,7 @@ class ContainerBench
      * Measures: Bulk instantiation throughput for simple classes.
      */
     #[Warmup(1)]
-    #[Revs(10)]
+    #[Revs(5)]
     #[Iterations(3)]
     public function benchIndependentClassesCold(): void
     {
@@ -123,7 +123,7 @@ class ContainerBench
      * Measures: Pure instantiation cost for no-dependency classes.
      */
     #[Warmup(1)]
-    #[Revs(10)]
+    #[Revs(5)]
     #[Iterations(3)]
     #[BeforeMethods('setUp')]
     public function benchIndependentClassesWarm(): void
@@ -139,7 +139,7 @@ class ContainerBench
      * Measures: Performance with deep recursion (stress test).
      */
     #[Warmup(1)]
-    #[Revs(10)]
+    #[Revs(5)]
     #[Iterations(3)]
     public function benchDeepChainCold(): void
     {
@@ -152,7 +152,7 @@ class ContainerBench
      * Measures: Deep autowiring cost.
      */
     #[Warmup(1)]
-    #[Revs(10)]
+    #[Revs(5)]
     #[Iterations(3)]
     #[BeforeMethods('setUp')]
     public function benchDeepChainWarm(): void
@@ -165,7 +165,7 @@ class ContainerBench
      * Measures: Minimal factory overhead.
      */
     #[Warmup(1)]
-    #[Revs(500)]
+    #[Revs(250)]
     #[Iterations(3)]
     public function benchFactoryNoParams(): void
     {
@@ -180,7 +180,7 @@ class ContainerBench
      * Measures: Factory overhead with explicit container access.
      */
     #[Warmup(1)]
-    #[Revs(500)]
+    #[Revs(250)]
     #[Iterations(3)]
     public function benchFactoryWithContainer(): void
     {
