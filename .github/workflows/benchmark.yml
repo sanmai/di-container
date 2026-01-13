@@ -1,6 +1,10 @@
 # yamllint disable rule:line-length
 name: Benchmark
 
+concurrency:
+  group: benchmark-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     paths:
