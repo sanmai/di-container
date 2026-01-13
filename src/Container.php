@@ -38,8 +38,10 @@ declare(strict_types=1);
 
 namespace DIContainer;
 
+use Closure;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
+use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionParameter;
 
@@ -77,6 +79,7 @@ class Container implements ContainerInterface
     public function __construct(iterable $values = [], iterable $bindings = [])
     {
         $this->values[ContainerInterface::class] = $this;
+        $this->values[static::class] = $this;
 
         foreach ($values as $id => $value) {
             $this->set($id, $value);
@@ -166,7 +169,7 @@ class Container implements ContainerInterface
 
         if (array_key_exists($id, $this->factories)) {
             /** @var T $value */
-            $value = $this->factories[$id]($this);
+            $value = $this->invokeFactory($this->factories[$id]);
 
             return $this->setValueOrThrow($id, $value);
         }
@@ -209,6 +212,31 @@ class Container implements ContainerInterface
         }
 
         return $reflectionClass->newInstanceArgs($resolvedArguments);
+    }
+
+    /**
+     * Invoke a factory callable with autowired parameters.
+     */
+    private function invokeFactory(callable $factory): object
+    {
+        $reflection = new ReflectionFunction(Closure::fromCallable($factory));
+        $params = $reflection->getParameters();
+
+        if ([] === $params) {
+            /** @var object */
+            return $factory();
+        }
+
+        $args = take($params)
+            ->map($this->resolveParameter(...))
+            ->toList();
+
+        if (count($args) !== count($params)) {
+            throw new Exception('Could not resolve all factory parameters');
+        }
+
+        /** @var object */
+        return $factory(...$args);
     }
 
     /**

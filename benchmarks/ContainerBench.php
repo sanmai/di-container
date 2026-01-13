@@ -189,4 +189,34 @@ class ContainerBench
         ]);
         $container->get(FixtureA1::class);
     }
+
+    /**
+     * Benchmark: Factory invocation with autowired parameter.
+     * Measures: Factory overhead with dependency autowiring.
+     */
+    #[Warmup(1)]
+    #[Revs(250)]
+    #[Iterations(3)]
+    public function benchFactoryAutowired(): void
+    {
+        $container = new Container([
+            'service.autowired' => static fn(FixtureA1 $dep) => $dep,
+        ]);
+        $container->get('service.autowired');
+    }
+
+    /**
+     * Benchmark: Factory invocation with autowired 100-class chain.
+     * Measures: Factory overhead with deep dependency autowiring.
+     */
+    #[Warmup(1)]
+    #[Revs(50)]
+    #[Iterations(3)]
+    public function benchFactoryAutowiredChain(): void
+    {
+        $container = new Container([
+            'service.chain' => static fn(FixtureA100 $dep) => $dep,
+        ]);
+        $container->get('service.chain');
+    }
 }
