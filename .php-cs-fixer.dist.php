@@ -71,6 +71,8 @@ $config
     ->setFinder(
         PhpCsFixer\Finder::create()
             ->in(__DIR__)
+            ->exclude('build')
+            ->exclude('benchmarks/Fixtures')
             ->append([__FILE__])
     )
 ;

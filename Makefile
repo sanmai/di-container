@@ -102,6 +102,22 @@ cs: test-prerequisites
 	$(SILENT) $(PHP) $(PHP_CS_FIXER) $(PHP_CS_FIXER_ARGS) --diff fix
 
 ##############################################################
+# Benchmarking                                               #
+##############################################################
+
+PHPBENCH=vendor/bin/phpbench
+
+GITHUB_OUTPUT ?= /dev/stdout
+
+.PHONY: benchmark
+benchmark: prerequisites benchmarks/Fixtures/A/FixtureA1.php
+	$(SILENT) $(PHP) $(PHPBENCH) run --progress=none --report=aggregate | sed 's/+/|/g; 1d; $$d' | sed '3,$$ { /^|[-| ]*|$$/d; }' >> $(GITHUB_OUTPUT)
+
+benchmarks/Fixtures/A/FixtureA1.php:
+	$(SILENT) $(PHP) benchmarks/generate-fixtures.php
+	$(SILENT) $(COMPOSER) dump-autoload --optimize --dev
+
+##############################################################
 # Prerequisites Setup                                        #
 ##############################################################
 

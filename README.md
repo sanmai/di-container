@@ -138,3 +138,11 @@ The container omits circular dependency checks for simplicity, an issue that eve
 ```bash
 make -j -k
 ```
+
+## Benchmarking
+
+```bash
+make benchmark
+```
+
+Runs [PHPBench](https://phpbench.readthedocs.io/) with OPcache and JIT enabled. Benchmarks cover autowiring chains of 100-500 classes, singleton cache hits, and bulk instantiation.
