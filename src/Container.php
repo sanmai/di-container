@@ -136,9 +136,11 @@ class Container implements ContainerInterface
     }
 
     /**
+     * Stores a value, validating type for class-string IDs only.
+     *
      * @template T of object
      *
-     * @param class-string<T> $id
+     * @param class-string<T> $id accepts any string; non-class IDs skip validation
      * @phpstan-return T
      */
     private function setValueOrThrow(string $id, object $value): object
