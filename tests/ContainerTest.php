@@ -328,4 +328,46 @@ class ContainerTest extends TestCase
 
         $this->assertInstanceOf(SimpleObject::class, $result->get(SimpleObject::class));
     }
+
+    public function testInjectPreBuiltObject(): void
+    {
+        $container = new Container();
+        $object = new SimpleObject();
+
+        $container->inject(SimpleObject::class, $object);
+
+        $this->assertSame($object, $container->get(SimpleObject::class));
+    }
+
+    public function testInjectTypeMismatchThrows(): void
+    {
+        $container = new Container();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessageMatches('/Expected instance of .*DependentObject, got .*SimpleObject/');
+
+        $container->inject(DependentObject::class, new SimpleObject());
+    }
+
+    public function testInjectOverridesBind(): void
+    {
+        $container = new Container();
+        $container->bind(SimpleObject::class, static fn() => new SimpleObject());
+
+        $injected = new SimpleObject();
+        $container->inject(SimpleObject::class, $injected);
+
+        $this->assertSame($injected, $container->get(SimpleObject::class));
+    }
+
+    public function testInjectSingletonBehavior(): void
+    {
+        $container = new Container();
+        $object = new SimpleObject();
+
+        $container->inject(SimpleObject::class, $object);
+
+        $this->assertSame($object, $container->get(SimpleObject::class));
+        $this->assertSame($object, $container->get(SimpleObject::class));
+    }
 }
