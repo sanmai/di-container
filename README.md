@@ -119,6 +119,15 @@ $repository = $container->get('app.repository');
 
 The `bind()` method and `$bindings` parameter accept both callables and builder class names, just like `set()`, but without class-string type constraints on the service ID.
 
+## Pre-Built Instances
+
+Use `inject()` to store objects that were created outside the container:
+
+```php
+$logger = new FileLogger('app.log');
+$container->inject(LoggerInterface::class, $logger);
+```
+
 ## Design Philosophy
 
 This container prioritizes simplicity, predictability, and architectural purity. It achieves this through:
