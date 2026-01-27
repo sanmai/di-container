@@ -121,6 +121,21 @@ class Container implements ContainerInterface
     }
 
     /**
+     * Inject a pre-built object instance directly into the container.
+     *
+     * @template T of object
+     * @param class-string<T>|non-empty-string $id
+     * @param T $value
+     */
+    public function inject(string $id, object $value): void
+    {
+        unset($this->factories[$id], $this->builders[$id]);
+
+        /** @var class-string<T> $id */
+        $this->setValueOrThrow($id, $value);
+    }
+
+    /**
      * @template T of object
      *
      * @param class-string<T> $id
