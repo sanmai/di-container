@@ -52,6 +52,9 @@ class ExtendedContainer extends Container
         return $clone;
     }
 
+    /**
+     * Register a factory with 'self' type hint to test fallback behavior.
+     */
     public function withSelfFactory(): static
     {
         $clone = clone $this;

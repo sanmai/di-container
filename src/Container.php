@@ -38,8 +38,10 @@ declare(strict_types=1);
 
 namespace DIContainer;
 
+use Closure;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
+use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionParameter;
 
@@ -52,6 +54,7 @@ use function Pipeline\take;
 use function reset;
 use function sprintf;
 use function str_contains;
+use function in_array;
 
 class Container implements ContainerInterface
 {
@@ -183,7 +186,7 @@ class Container implements ContainerInterface
 
         if (array_key_exists($id, $this->factories)) {
             /** @var T $value */
-            $value = $this->factories[$id]($this);
+            $value = $this->invokeFactory($this->factories[$id]);
 
             return $this->setValueOrThrow($id, $value);
         }
@@ -229,6 +232,28 @@ class Container implements ContainerInterface
     }
 
     /**
+     * Invoke a factory callable with autowired parameters.
+     */
+    private function invokeFactory(callable $factory): object
+    {
+        $reflection = new ReflectionFunction(Closure::fromCallable($factory));
+        $params = $reflection->getParameters();
+
+        $args = take($params)
+            ->map($this->resolveParameter(...))
+            ->toList();
+
+        // Fall back to passing container for backward compatibility
+        if (count($args) !== count($params)) {
+            /** @var object */
+            return $factory($this);
+        }
+
+        /** @var object */
+        return $factory(...$args);
+    }
+
+    /**
      * Builds a potentially incomplete list of arguments for a constructor; as list of arguments may
      * contain null values, we use a generator that can yield none or one value as an option type.
      *
@@ -253,8 +278,21 @@ class Container implements ContainerInterface
             return;
         }
 
-        /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
+
+        // Special type names (self, static, parent) cannot be resolved for closures
+        if (in_array($paramTypeName, ['self', 'static', 'parent'], true)) {
+            return;
+        }
+
+        // If requesting the container itself, return $this
+        if ($this instanceof $paramTypeName) {
+            yield $this;
+
+            return;
+        }
+
+        /** @var class-string $paramTypeName */
 
         // Found an instantiable class, done
         if ((new ReflectionClass($paramTypeName))->isInstantiable()) {
