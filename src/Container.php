@@ -232,7 +232,7 @@ class Container implements ContainerInterface
      * Builds a potentially incomplete list of arguments for a constructor; as list of arguments may
      * contain null values, we use a generator that can yield none or one value as an option type.
      *
-     * @return iterable<array-key, object>
+     * @return iterable<array-key, mixed>
      */
     private function resolveParameter(ReflectionParameter $parameter): iterable
     {
@@ -250,6 +250,10 @@ class Container implements ContainerInterface
 
         // Only attempt to resolve a non-built-in named type (a class/interface)
         if ($paramType->isBuiltin()) {
+            if ($parameter->isDefaultValueAvailable()) {
+                yield $parameter->getDefaultValue();
+            }
+
             return;
         }
 
@@ -268,6 +272,10 @@ class Container implements ContainerInterface
 
         // We expect exactly one factory to match the type, otherwise we cannot resolve the parameter
         if (1 !== count($matchingTypes)) {
+            if ($parameter->isDefaultValueAvailable()) {
+                yield $parameter->getDefaultValue();
+            }
+
             return;
         }
 
