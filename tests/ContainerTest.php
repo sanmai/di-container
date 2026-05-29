@@ -85,6 +85,8 @@ class ContainerTest extends TestCase
         $this->assertSame('hello', $object->getName());
 
         $this->assertSame($container->get(SimpleObject::class), $object->getObject());
+
+        $this->assertSame(ComplexObject::DEFAULT_ID, $object->getId());
     }
 
     public function testItResolvesInterfaceBuilders(): void
