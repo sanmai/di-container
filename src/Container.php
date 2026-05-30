@@ -185,6 +185,10 @@ class Container implements ContainerInterface
             return $this->values[$id];
         }
 
+        if (array_key_exists($id, $this->instances)) {
+            return $this->instances[$id];
+        }
+
         if (array_key_exists($id, $this->builders)) {
             /** @var Builder<T> $builder */
             $builder = $this->get($this->builders[$id]);
@@ -245,6 +249,18 @@ class Container implements ContainerInterface
     }
 
     /**
+     * @return iterable<array-key, mixed>
+     */
+    private static function resolveDefaultValue(ReflectionParameter $parameter): iterable
+    {
+        if (!$parameter->isDefaultValueAvailable()) {
+            return;
+        }
+
+        yield $parameter->getDefaultValue();
+    }
+
+    /**
      * Builds a potentially incomplete list of arguments for a constructor; as a list of arguments may
      * contain null values, we use a generator that can yield none or one value as an option type.
      *
@@ -264,8 +280,9 @@ class Container implements ContainerInterface
             throw new Exception('Composite types are not supported');
         }
 
-        // Only attempt to resolve a non-built-in named type (a class/interface)
+        // Only attempt to fully resolve non-built-in types (internal/extgernal classes/interfaces)
         if ($paramType->isBuiltin()) {
+            yield from self::resolveDefaultValue($parameter);
             return;
         }
 
@@ -282,21 +299,13 @@ class Container implements ContainerInterface
         // Look for a factory that can create an instance of an interface or abstract class
         $matchingTypes = $this->providersForType($paramTypeName);
 
-        // Found nothing, but there's a default value - use that
-        if (
-            [] === $matchingTypes
-            && $parameter->isDefaultValueAvailable()
-        ) {
-            yield $parameter->getDefaultValue();
-        }
-
-        // We expect exactly one factory to match the type, otherwise we cannot resolve the parameter
-        if (1 !== count($matchingTypes)) {
-            return;
-        }
-
-        // Happy path, found what we need
-        yield $this->get(reset($matchingTypes));
+        // We expect exactly one factory to match the type, otherwise we cannot resolve the parameter,
+        // but we should also consider default values if present.
+        yield from match (count($matchingTypes)) {
+            1 => [$this->get(reset($matchingTypes))],
+            0 => self::resolveDefaultValue($parameter),
+            default => [],
+        };
     }
 
     /**
