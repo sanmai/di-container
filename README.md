@@ -128,6 +128,14 @@ $logger = new FileLogger('app.log');
 $container->inject(LoggerInterface::class, $logger);
 ```
 
+Injected instances are wired into dependents just like any other service, so a class that needs `LoggerInterface` in its constructor receives the pre-built one:
+
+```php
+$container->get(ServiceNeedingLogger::class); // gets $logger
+```
+
+`inject()` overrides any prior binding or already-resolved instance for that ID, and is in turn overridden by a later `set()` or `bind()`. The last registration wins.
+
 ## Design Philosophy
 
 This container prioritizes simplicity, predictability, and architectural purity. It achieves this through:

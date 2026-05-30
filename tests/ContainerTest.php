@@ -385,6 +385,28 @@ class ContainerTest extends TestCase
         $this->assertSame($injected, $container->get(SimpleObject::class));
     }
 
+    public function testInjectOverridesResolvedService(): void
+    {
+        $container = new Container();
+        $container->get(SimpleObject::class);
+
+        $injected = new SimpleObject();
+        $container->inject(SimpleObject::class, $injected);
+
+        $this->assertSame($injected, $container->get(SimpleObject::class));
+    }
+
+    public function testBindOverridesInject(): void
+    {
+        $container = new Container();
+        $container->inject(SimpleObject::class, new SimpleObject());
+
+        $rebound = new SimpleObject();
+        $container->bind(SimpleObject::class, static fn() => $rebound);
+
+        $this->assertSame($rebound, $container->get(SimpleObject::class));
+    }
+
     public function testInjectSingletonBehavior(): void
     {
         $container = new Container();

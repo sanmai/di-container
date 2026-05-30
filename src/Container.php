@@ -135,7 +135,7 @@ class Container implements ContainerInterface
      */
     public function inject(string $id, object $value): void
     {
-        unset($this->factories[$id], $this->builders[$id]);
+        unset($this->values[$id], $this->factories[$id], $this->builders[$id]);
 
         self::assertType($id, $value);
 
@@ -184,10 +184,6 @@ class Container implements ContainerInterface
             return $this->values[$id];
         }
 
-        if (array_key_exists($id, $this->prebuilt)) {
-            return $this->prebuilt[$id];
-        }
-
         if (array_key_exists($id, $this->builders)) {
             /** @var Builder<T> $builder */
             $builder = $this->get($this->builders[$id]);
@@ -200,6 +196,12 @@ class Container implements ContainerInterface
             $value = $this->factories[$id]($this);
 
             return $this->setValueOrThrow($id, $value);
+        }
+
+        // Pre-built instances are the lowest-priority explicit source: a registered
+        // builder or factory overrides them, so re-registering a service takes effect.
+        if (array_key_exists($id, $this->prebuilt)) {
+            return $this->prebuilt[$id];
         }
 
         $value = $this->createService($id);
@@ -308,7 +310,7 @@ class Container implements ContainerInterface
     private function providersForType(string $type): array
     {
         /** @var list<class-string<object>> */
-        return take($this->factories, $this->builders, $this->prebuilt)
+        return take($this->factories + $this->builders + $this->prebuilt)
             ->keys()
             ->filter(static fn(string $id) => is_a($id, $type, true))
             ->toList();
