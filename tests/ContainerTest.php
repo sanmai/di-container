@@ -51,6 +51,7 @@ use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
+use Tests\DIContainer\Fixtures\BuiltinDefaultDependent;
 use Tests\DIContainer\Fixtures\NameNeederOptional;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
@@ -344,11 +345,13 @@ class ContainerTest extends TestCase
     public function testInjectPreBuiltObject(): void
     {
         $container = new Container();
-        $object = new SimpleObject();
+        $injected = $this->createMock(NamedObjectInterface::class);
+        $injected->method('getName')->willReturn('injected');
 
-        $container->inject(SimpleObject::class, $object);
+        $container->inject(NamedObjectInterface::class, $injected);
 
-        $this->assertSame($object, $container->get(SimpleObject::class));
+        // The injected instance must be discoverable when autowiring a dependent
+        $this->assertSame('injected', $container->get(NameNeeder::class)->getName());
     }
 
     public function testPreBuiltObjectDependency(): void
@@ -430,5 +433,28 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
         $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
         $this->assertNull($object->getOptional());
+    }
+
+    public function testItResolvesOptionalBuiltinWithDefault(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(BuiltinDefaultDependent::class);
+
+        $this->assertSame(42, $object->getId());
+        $this->assertNull($object->getNamed());
+    }
+
+    public function testItBindsAfterSkippingScalarDefault(): void
+    {
+        $container = new Container();
+
+        $injected = $this->createMock(NamedObjectInterface::class);
+        $container->inject(NamedObjectInterface::class, $injected);
+
+        $object = $container->get(BuiltinDefaultDependent::class);
+
+        $this->assertSame(42, $object->getId());
+        $this->assertSame($injected, $object->getNamed());
     }
 }
