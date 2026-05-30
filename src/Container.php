@@ -61,6 +61,11 @@ class Container implements ContainerInterface
     private array $values = [];
 
     /**
+     * @var array<class-string<object>|non-empty-string, object>
+     */
+    private array $prebuilt = [];
+
+    /**
      * @var array<class-string<object>|non-empty-string, callable>
      */
     private array $factories = [];
@@ -76,6 +81,7 @@ class Container implements ContainerInterface
      */
     public function __construct(iterable $values = [], iterable $bindings = [])
     {
+        // Cache the value letting a builder override it
         $this->values[ContainerInterface::class] = $this;
 
         foreach ($values as $id => $value) {
@@ -129,10 +135,12 @@ class Container implements ContainerInterface
      */
     public function inject(string $id, object $value): void
     {
-        unset($this->factories[$id], $this->builders[$id]);
+        // Injected pre-built dependencies override everything else at the time of injection
+        unset($this->values[$id], $this->factories[$id], $this->builders[$id]);
 
-        /** @var class-string<T> $id */
-        $this->setValueOrThrow($id, $value);
+        self::assertType($id, $value);
+
+        $this->prebuilt[$id] = $value;
     }
 
     /**
@@ -145,21 +153,24 @@ class Container implements ContainerInterface
      */
     private function setValueOrThrow(string $id, object $value): object
     {
+        self::assertType($id, $value);
+
+        $this->values[$id] = $value;
+
+        /** @var T */
+        return $value;
+    }
+
+    private static function assertType(string $id, object $value): void
+    {
         // Break the contract to skip the type check for IDs that do not look like a valid namespaced PHP class name
         if (str_contains($id, '.') || !str_contains($id, '\\')) {
-            $this->values[$id] = $value;
-
-            /** @var T */
-            return $value;
+            return;
         }
 
         if (!$value instanceof $id) {
             throw new Exception(sprintf('Expected instance of %s, got %s', $id, get_class($value)));
         }
-
-        $this->values[$id] = $value;
-
-        return $value;
     }
 
     /**
@@ -186,6 +197,11 @@ class Container implements ContainerInterface
             $value = $this->factories[$id]($this);
 
             return $this->setValueOrThrow($id, $value);
+        }
+
+        // Consider pre-built instances last to give way to factories and builders
+        if (array_key_exists($id, $this->prebuilt)) {
+            return $this->prebuilt[$id];
         }
 
         $value = $this->createService($id);
@@ -294,7 +310,7 @@ class Container implements ContainerInterface
     private function providersForType(string $type): array
     {
         /** @var list<class-string<object>> */
-        return take($this->factories, $this->builders)
+        return take($this->factories, $this->builders, $this->prebuilt)
             ->keys()
             ->filter(static fn(string $id) => is_a($id, $type, true))
             ->toList();

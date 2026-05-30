@@ -44,6 +44,8 @@ $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects datab
 
 The order in which you define your services is not important, as dependencies are only resolved when they are requested.
 
+That said, injected pre-built instance instances override prior dependencies for that ID, but a later `set()` or `bind()` overrides again.
+
 ## Builder Objects
 
 Builder objects can encapsulate arbitrary complex construction logic. They can use dependency injection, which makes them cohesive, independently testable, and reusable.

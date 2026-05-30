@@ -351,6 +351,19 @@ class ContainerTest extends TestCase
         $this->assertSame($object, $container->get(SimpleObject::class));
     }
 
+    public function testPreBuiltObjectDependency(): void
+    {
+        $injected = $this->createMock(NamedObjectInterface::class);
+        $injected->expects($this->once())
+            ->method('getName')
+            ->willReturn('injected');
+
+        $container = new Container();
+        $container->inject(NamedObjectInterface::class, $injected);
+
+        $this->assertSame('injected', $container->get(NameNeeder::class)->getName());
+    }
+
     public function testInjectTypeMismatchThrows(): void
     {
         $container = new Container();
@@ -370,6 +383,31 @@ class ContainerTest extends TestCase
         $container->inject(SimpleObject::class, $injected);
 
         $this->assertSame($injected, $container->get(SimpleObject::class));
+    }
+
+    public function testInjectOverridesResolvedService(): void
+    {
+        $container = new Container();
+        $built = $container->get(SimpleObject::class);
+
+        $injected = new SimpleObject();
+        $container->inject(SimpleObject::class, $injected);
+
+        $this->assertSame($injected, $container->get(SimpleObject::class));
+        $this->assertNotSame($built, $container->get(SimpleObject::class));
+    }
+
+    public function testBindOverridesInject(): void
+    {
+        $container = new Container();
+        $container->inject(SimpleObject::class, new SimpleObject());
+        $injected = $container->get(SimpleObject::class);
+
+        $rebound = new SimpleObject();
+        $container->bind(SimpleObject::class, static fn() => $rebound);
+
+        $this->assertSame($rebound, $container->get(SimpleObject::class));
+        $this->assertNotSame($injected, $container->get(SimpleObject::class));
     }
 
     public function testInjectSingletonBehavior(): void
