@@ -295,11 +295,15 @@ class Container implements ContainerInterface
         // Look for a factory that can create an instance of an interface or abstract class
         $matchingTypes = $this->providersForType($paramTypeName);
 
-        // We expect exactly one factory to match the type, otherwise we cannot resolve the parameter,
+        // Happy path, found what we need
+        if (1 === count($matchingTypes)) {
+            yield $this->get(reset($matchingTypes));
+        }
+
+        // We expect exactly one factory to match the type to resolve a parameter unambiguously,
         // but we should also consider default values if present.
-        yield from match (count($matchingTypes)) {
-            1 => [$this->get(reset($matchingTypes))],
-            0 => self::resolveDefaultValue($parameter),
+        yield from match ($matchingTypes) {
+            [] => self::resolveDefaultValue($parameter),
             default => [],
         };
     }
