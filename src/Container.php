@@ -269,7 +269,7 @@ class Container implements ContainerInterface
         // We expect exactly one factory to match the type, otherwise we cannot resolve the parameter
         if (1 !== count($matchingTypes)) {
             if ($parameter->isDefaultValueAvailable()) {
-                yield $parameter->getDefaultValue();
+               // yield $parameter->getDefaultValue();
             }
             return;
         }

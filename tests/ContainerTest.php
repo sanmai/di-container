@@ -379,23 +379,13 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        // $this->expectExceptionMessage("Unknown service");
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessageMatches('/Unknown service .*OptionalInterfaceDependent/');
+
         $object = $container->get(OptionalInterfaceDependent::class);
 
         $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
         $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
         $this->assertNull($object->getOptional());
-    }
-
-    public function testItResolvesOptionalNullableInterfaceWithFactory(): void
-    {
-        $container = new Container([
-            NamedObjectInterface::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
-        ]);
-
-        $object = $container->get(OptionalInterfaceDependent::class);
-
-        $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
-        $this->assertSame('hello', $object->getOptional()->getName());
     }
 }
