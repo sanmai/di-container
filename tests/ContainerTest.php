@@ -445,16 +445,16 @@ class ContainerTest extends TestCase
         $this->assertNull($object->getNamed());
     }
 
-    public function testItBindsAfterSkippingABuiltinWithDefault(): void
+    public function testItBindsAfterSkippingScalarDefault(): void
     {
         $container = new Container();
-        $container->inject(NamedObjectInterface::class, $this->createMock(NamedObjectInterface::class));
 
-        $this->assertInstanceOf(NamedObjectInterface::class, $container->get(NamedObjectInterface::class));
+        $injected = $this->createMock(NamedObjectInterface::class);
+        $container->inject(NamedObjectInterface::class, $injected);
 
         $object = $container->get(BuiltinDefaultDependent::class);
 
         $this->assertSame(42, $object->getId());
-        $this->assertInstanceOf(NamedObjectInterface::class, $object->getNamed());
+        $this->assertSame($injected, $object->getNamed());
     }
 }

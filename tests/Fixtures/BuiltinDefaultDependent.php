@@ -39,12 +39,8 @@ declare(strict_types=1);
 namespace Tests\DIContainer\Fixtures;
 
 /**
- * Autowired (no builder, no factory) so the container reflects this constructor.
- *
- * The builtin $id has a default the container must honour. It also sits BEFORE a
- * resolvable optional $named: skipping $id instead of yielding its default would
- * shift $named into the $id slot positionally, so this fixture pins both the
- * default-honouring and the positional-integrity behaviour at once.
+ * Scalar parameter with a default value sits before an optional injectable dependency,
+ * so the container must pick up the default value to be able to resolve the optional.
  */
 class BuiltinDefaultDependent
 {
