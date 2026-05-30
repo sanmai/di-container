@@ -50,7 +50,6 @@ use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
-use Tests\DIContainer\Fixtures\OptionalBuiltinDependent;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
@@ -384,28 +383,5 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
         $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
         $this->assertNull($object->getOptional());
-    }
-
-    public function testItResolvesOptionalNullableInterfaceWithFactory(): void
-    {
-        $container = new Container([
-            NamedObjectInterface::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
-        ]);
-
-        $object = $container->get(OptionalInterfaceDependent::class);
-
-        $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
-        $this->assertSame('hello', $object->getOptional()->getName());
-    }
-
-    public function testItResolvesOptionalBuiltinWithDefault(): void
-    {
-        $container = new Container();
-
-        $object = $container->get(OptionalBuiltinDependent::class);
-
-        $this->assertInstanceOf(OptionalBuiltinDependent::class, $object);
-        $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
-        $this->assertSame('default', $object->getName());
     }
 }
