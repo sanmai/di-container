@@ -285,6 +285,14 @@ class Container implements ContainerInterface
         /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
 
+        // An optional dependency whose type is not even loadable (e.g. a package
+        // that is not installed) cannot be reflected; defer to its default value.
+        if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
+            yield from self::resolveDefaultValue($parameter);
+
+            return;
+        }
+
         // Found an instantiable class, done
         if ((new ReflectionClass($paramTypeName))->isInstantiable()) {
             yield $this->get($paramTypeName);

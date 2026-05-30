@@ -52,6 +52,7 @@ use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
 use Tests\DIContainer\Fixtures\BuiltinDefaultDependent;
+use Tests\DIContainer\Fixtures\MissingTypeOptionalDependent;
 use Tests\DIContainer\Fixtures\NameNeederOptional;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
@@ -432,6 +433,16 @@ class ContainerTest extends TestCase
 
         $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
         $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
+        $this->assertNull($object->getOptional());
+    }
+
+    public function testItResolvesOptionalDependencyWithUnloadableType(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(MissingTypeOptionalDependent::class);
+
+        $this->assertInstanceOf(MissingTypeOptionalDependent::class, $object);
         $this->assertNull($object->getOptional());
     }
 
