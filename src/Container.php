@@ -185,10 +185,6 @@ class Container implements ContainerInterface
             return $this->values[$id];
         }
 
-        if (array_key_exists($id, $this->instances)) {
-            return $this->instances[$id];
-        }
-
         if (array_key_exists($id, $this->builders)) {
             /** @var Builder<T> $builder */
             $builder = $this->get($this->builders[$id]);
