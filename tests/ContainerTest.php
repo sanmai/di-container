@@ -345,11 +345,13 @@ class ContainerTest extends TestCase
     public function testInjectPreBuiltObject(): void
     {
         $container = new Container();
-        $object = new SimpleObject();
+        $injected = $this->createMock(NamedObjectInterface::class);
+        $injected->method('getName')->willReturn('injected');
 
-        $container->inject(SimpleObject::class, $object);
+        $container->inject(NamedObjectInterface::class, $injected);
 
-        $this->assertSame($object, $container->get(SimpleObject::class));
+        // The injected instance must be discoverable when autowiring a dependent
+        $this->assertSame('injected', $container->get(NameNeeder::class)->getName());
     }
 
     public function testInjectTypeMismatchThrows(): void
