@@ -267,11 +267,20 @@ class Container implements ContainerInterface
         $matchingTypes = $this->providersForType($paramTypeName);
 
         // We expect exactly one factory to match the type, otherwise we cannot resolve the parameter
-        if (1 !== count($matchingTypes)) {
+        if (count($matchingTypes) > 1) {
             return;
         }
 
-        yield $this->get(reset($matchingTypes));
+        // Happy path, found what we need
+        if (count($matchingTypes) === 1) {
+            yield $this->get(reset($matchingTypes));
+            return;
+        }
+
+        // Found nothing, but there's a default value - use that
+        if ($parameter->isDefaultValueAvailable()) {
+            yield $parameter->getDefaultValue();
+        }
     }
 
     /**
