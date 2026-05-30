@@ -276,7 +276,7 @@ class Container implements ContainerInterface
             throw new Exception('Composite types are not supported');
         }
 
-        // Only attempt to fully resolve non-built-in types (internal/extgernal classes/interfaces)
+        // Only attempt to fully resolve non-built-in types (internal/external classes/interfaces)
         if ($paramType->isBuiltin()) {
             yield from self::resolveDefaultValue($parameter);
             return;
