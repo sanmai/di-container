@@ -379,6 +379,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
+        // $this->expectExceptionMessage("Unknown service");
         $object = $container->get(OptionalInterfaceDependent::class);
 
         $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
