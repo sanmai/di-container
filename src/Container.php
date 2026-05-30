@@ -229,7 +229,7 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Builds a potentially incomplete list of arguments for a constructor; as list of arguments may
+     * Builds a potentially incomplete list of arguments for a constructor; as a list of arguments may
      * contain null values, we use a generator that can yield none or one value as an option type.
      *
      * @return iterable<array-key, mixed>
@@ -270,6 +270,14 @@ class Container implements ContainerInterface
         // Look for a factory that can create an instance of an interface or abstract class
         $matchingTypes = $this->providersForType($paramTypeName);
 
+        // Found nothing, but there's a default value - use that
+        if (
+            [] === $matchingTypes
+            && $parameter->isDefaultValueAvailable()
+        ) {
+            yield $parameter->getDefaultValue();
+        }
+
         // We expect exactly one factory to match the type, otherwise we cannot resolve the parameter
         if (1 !== count($matchingTypes)) {
             if ($parameter->isDefaultValueAvailable()) {
@@ -279,6 +287,7 @@ class Container implements ContainerInterface
             return;
         }
 
+        // Happy path, found what we need
         yield $this->get(reset($matchingTypes));
     }
 
