@@ -42,6 +42,7 @@ use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
+use ReflectionException;
 
 use function array_key_exists;
 use function count;
@@ -285,16 +286,16 @@ class Container implements ContainerInterface
         /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
 
-        // An optional dependency whose type is not even loadable (e.g. a package
-        // that is not installed) cannot be reflected; defer to its default value.
-        if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
+        // Defer to a default value for classes that cannot be reflected
+        try {
+            $reflectionClass = new ReflectionClass($paramTypeName);
+        } catch (ReflectionException $e) {
             yield from self::resolveDefaultValue($parameter);
-
             return;
         }
 
         // Found an instantiable class, done
-        if ((new ReflectionClass($paramTypeName))->isInstantiable()) {
+        if ($reflectionClass->isInstantiable()) {
             yield $this->get($paramTypeName);
 
             return;
