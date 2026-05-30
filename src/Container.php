@@ -52,6 +52,8 @@ use function Pipeline\take;
 use function reset;
 use function sprintf;
 use function str_contains;
+use function class_exists;
+use function interface_exists;
 
 class Container implements ContainerInterface
 {
@@ -284,6 +286,12 @@ class Container implements ContainerInterface
 
         /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
+
+        // Defer to a default value for classes that cannot be reflected
+        if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
+            yield from self::resolveDefaultValue($parameter);
+            return;
+        }
 
         // Found an instantiable class, done
         if ((new ReflectionClass($paramTypeName))->isInstantiable()) {
