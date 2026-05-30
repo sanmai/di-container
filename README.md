@@ -44,6 +44,8 @@ $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects datab
 
 The order in which you define your services is not important, as dependencies are only resolved when they are requested.
 
+That said, injected pre-built instance instances override prior dependencies for that ID, but a later `set()` or `bind()` overrides again.
+
 ## Builder Objects
 
 Builder objects can encapsulate arbitrary complex construction logic. They can use dependency injection, which makes them cohesive, independently testable, and reusable.
@@ -127,14 +129,6 @@ Use `inject()` to store objects that were created outside the container:
 $logger = new FileLogger('app.log');
 $container->inject(LoggerInterface::class, $logger);
 ```
-
-Injected instances are wired into dependents just like any other service, so a class that needs `LoggerInterface` in its constructor receives the pre-built one:
-
-```php
-$container->get(ServiceNeedingLogger::class); // gets $logger
-```
-
-`inject()` overrides any prior binding or already-resolved instance for that ID, and is in turn overridden by a later `set()` or `bind()`. The last registration wins.
 
 ## Design Philosophy
 
