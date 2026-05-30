@@ -50,6 +50,7 @@ use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
+use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
 use Tests\DIContainer\Fixtures\VariadicConstructor;
@@ -371,5 +372,19 @@ class ContainerTest extends TestCase
 
         $this->assertSame($object, $container->get(SimpleObject::class));
         $this->assertSame($object, $container->get(SimpleObject::class));
+    }
+
+    public function testItResolvesOptionalNullableInterfaceWithDefault(): void
+    {
+        $container = new Container();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessageMatches('/Unknown service .*OptionalInterfaceDependent/');
+
+        $object = $container->get(OptionalInterfaceDependent::class);
+
+        $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
+        $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
+        $this->assertNull($object->getOptional());
     }
 }
