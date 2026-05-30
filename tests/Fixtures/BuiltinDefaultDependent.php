@@ -40,13 +40,18 @@ namespace Tests\DIContainer\Fixtures;
 
 /**
  * Autowired (no builder, no factory) so the container reflects this constructor.
- * The builtin parameter has a default the container must honour.
+ *
+ * The builtin $id has a default the container must honour. It also sits BEFORE a
+ * resolvable optional $named: skipping $id instead of yielding its default would
+ * shift $named into the $id slot positionally, so this fixture pins both the
+ * default-honouring and the positional-integrity behaviour at once.
  */
 class BuiltinDefaultDependent
 {
     public function __construct(
         private readonly SimpleObject $required,
         private readonly int $id = 42,
+        private readonly ?NamedObjectInterface $named = null,
     ) {}
 
     public function getRequired(): SimpleObject
@@ -57,5 +62,10 @@ class BuiltinDefaultDependent
     public function getId(): int
     {
         return $this->id;
+    }
+
+    public function getNamed(): ?NamedObjectInterface
+    {
+        return $this->named;
     }
 }

@@ -405,4 +405,16 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
         $this->assertSame(42, $object->getId());
     }
+
+    public function testItDoesNotMisbindWhenSkippingABuiltinBeforeAResolvableOptional(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
+        ]);
+
+        $object = $container->get(BuiltinDefaultDependent::class);
+
+        $this->assertSame(42, $object->getId());
+        $this->assertInstanceOf(NamedObjectInterface::class, $object->getNamed());
+    }
 }

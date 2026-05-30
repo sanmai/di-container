@@ -248,7 +248,13 @@ class Container implements ContainerInterface
             throw new Exception('Composite types are not supported');
         }
 
-        // Only attempt to resolve a non-built-in named type (a class/interface)
+        // For built-in scalar types settle on a default value if present
+        if ($paramType->isBuiltin() && $parameter->isDefaultValueAvailable()) {
+            yield $parameter->getDefaultValue();
+            return;
+        }
+
+        // Only attempt to resolve non-built-in types (a class/interface)
         if ($paramType->isBuiltin()) {
             return;
         }
