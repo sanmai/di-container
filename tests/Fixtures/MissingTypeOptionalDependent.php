@@ -41,7 +41,7 @@ namespace Tests\DIContainer\Fixtures;
 use Tests\DIContainer\Fixtures\Absent\AbsentInterface;
 
 /**
- * Optional dependency whose type cannot be loaded at all should be handled with grace.
+ * Optional dependency whose type cannot be loaded at all.
  */
 class MissingTypeOptionalDependent
 {
