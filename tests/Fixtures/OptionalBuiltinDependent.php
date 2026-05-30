@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (c) 2017, Maks Rafalko
  * Copyright (c) 2020, Théo FIDRY
