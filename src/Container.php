@@ -288,7 +288,7 @@ class Container implements ContainerInterface
 
         try {
             $reflectionClass = new ReflectionClass($paramTypeName);
-        } catch (ReflectionException $e) {
+        } catch (ReflectionException) {
             // Defer to a default value for classes that cannot be reflected
             yield from self::resolveDefaultValue($parameter);
             return;
