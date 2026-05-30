@@ -161,9 +161,6 @@ class Container implements ContainerInterface
         return $value;
     }
 
-    /**
-     * Validates type for class-string IDs only; non-class IDs skip validation.
-     */
     private static function assertType(string $id, object $value): void
     {
         // Break the contract to skip the type check for IDs that do not look like a valid namespaced PHP class name
