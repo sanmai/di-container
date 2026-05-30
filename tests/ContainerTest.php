@@ -51,6 +51,7 @@ use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
+use Tests\DIContainer\Fixtures\BuiltinDefaultDependent;
 use Tests\DIContainer\Fixtures\NameNeederOptional;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
@@ -392,5 +393,16 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
         $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
         $this->assertNull($object->getOptional());
+    }
+
+    public function testItResolvesOptionalBuiltinWithDefault(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(BuiltinDefaultDependent::class);
+
+        $this->assertInstanceOf(BuiltinDefaultDependent::class, $object);
+        $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
+        $this->assertSame(42, $object->getId());
     }
 }
