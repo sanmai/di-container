@@ -229,10 +229,10 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Builds a potentially incomplete list of arguments for a constructor; as list of arguments may
+     * Builds a potentially incomplete list of arguments for a constructor; as a list of arguments may
      * contain null values, we use a generator that can yield none or one value as an option type.
      *
-     * @return iterable<array-key, object>
+     * @return iterable<array-key, mixed>
      */
     private function resolveParameter(ReflectionParameter $parameter): iterable
     {
