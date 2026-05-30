@@ -272,7 +272,7 @@ class Container implements ContainerInterface
         }
 
         // Happy path, found what we need
-        if (count($matchingTypes) === 1) {
+        if (1 === count($matchingTypes)) {
             yield $this->get(reset($matchingTypes));
             return;
         }
