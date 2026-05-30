@@ -61,11 +61,9 @@ class Container implements ContainerInterface
     private array $values = [];
 
     /**
-     * Deliberately injected pre-built instances; unlike $values, these participate in type resolution.
-     *
      * @var array<class-string<object>|non-empty-string, object>
      */
-    private array $instances = [];
+    private array $prebuilt = [];
 
     /**
      * @var array<class-string<object>|non-empty-string, callable>
@@ -83,6 +81,7 @@ class Container implements ContainerInterface
      */
     public function __construct(iterable $values = [], iterable $bindings = [])
     {
+        // Cache the value letting a builder override it
         $this->values[ContainerInterface::class] = $this;
 
         foreach ($values as $id => $value) {
@@ -140,7 +139,7 @@ class Container implements ContainerInterface
 
         self::assertType($id, $value);
 
-        $this->instances[$id] = $value;
+        $this->prebuilt[$id] = $value;
     }
 
     /**
@@ -185,8 +184,8 @@ class Container implements ContainerInterface
             return $this->values[$id];
         }
 
-        if (array_key_exists($id, $this->instances)) {
-            return $this->instances[$id];
+        if (array_key_exists($id, $this->prebuilt)) {
+            return $this->prebuilt[$id];
         }
 
         if (array_key_exists($id, $this->builders)) {
@@ -309,7 +308,7 @@ class Container implements ContainerInterface
     private function providersForType(string $type): array
     {
         /** @var list<class-string<object>> */
-        return take($this->factories, $this->builders, $this->instances)
+        return take($this->factories, $this->builders, $this->prebuilt)
             ->keys()
             ->filter(static fn(string $id) => is_a($id, $type, true))
             ->toList();
