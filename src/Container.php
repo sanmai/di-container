@@ -135,6 +135,7 @@ class Container implements ContainerInterface
      */
     public function inject(string $id, object $value): void
     {
+        // Injected pre-built dependencies override everything else
         unset($this->values[$id], $this->factories[$id], $this->builders[$id]);
 
         self::assertType($id, $value);
@@ -198,8 +199,7 @@ class Container implements ContainerInterface
             return $this->setValueOrThrow($id, $value);
         }
 
-        // Pre-built instances are the lowest-priority explicit source: a registered
-        // builder or factory overrides them, so re-registering a service takes effect.
+        // Consider pre-built instances last to give way to factories and builders
         if (array_key_exists($id, $this->prebuilt)) {
             return $this->prebuilt[$id];
         }
