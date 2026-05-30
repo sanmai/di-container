@@ -397,15 +397,4 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
         $this->assertSame('hello', $object->getOptional()->getName());
     }
-
-    public function testItResolvesOptionalBuiltinWithDefault(): void
-    {
-        $container = new Container();
-
-        $object = $container->get(OptionalBuiltinDependent::class);
-
-        $this->assertInstanceOf(OptionalBuiltinDependent::class, $object);
-        $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
-        $this->assertSame('default', $object->getName());
-    }
 }

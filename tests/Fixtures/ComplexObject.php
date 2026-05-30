@@ -43,7 +43,8 @@ class ComplexObject implements NamedObjectInterface
     public function __construct(
         private readonly string $name,
         private readonly SimpleObject $object,
-        public int $optionalId = self::DEFAULT_ID,
+        private int $optionalId = self::DEFAULT_ID,
+        ?array $optionalList = null,
     ) {}
 
     public function getName(): string
