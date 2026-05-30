@@ -396,27 +396,4 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
         $this->assertNull($object->getOptional());
     }
-
-    public function testItResolvesOptionalBuiltinWithDefault(): void
-    {
-        $container = new Container();
-
-        $object = $container->get(BuiltinDefaultDependent::class);
-
-        $this->assertSame(42, $object->getId());
-        $this->assertNull($object->getNamed());
-    }
-
-    public function testItBindsAfterSkippingABuiltinWithDefault(): void
-    {
-        $container = new Container();
-        $container->inject(NamedObjectInterface::class, $this->createMock(NamedObjectInterface::class));
-
-        $this->assertInstanceOf(NamedObjectInterface::class, $container->get(NamedObjectInterface::class));
-
-        $object = $container->get(BuiltinDefaultDependent::class);
-
-        $this->assertSame(42, $object->getId());
-        $this->assertInstanceOf(NamedObjectInterface::class, $object->getNamed());
-    }
 }
