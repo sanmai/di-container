@@ -61,6 +61,13 @@ class Container implements ContainerInterface
     private array $values = [];
 
     /**
+     * Deliberately injected pre-built instances; unlike $values, these participate in type resolution.
+     *
+     * @var array<class-string<object>|non-empty-string, object>
+     */
+    private array $instances = [];
+
+    /**
      * @var array<class-string<object>|non-empty-string, callable>
      */
     private array $factories = [];
@@ -131,8 +138,9 @@ class Container implements ContainerInterface
     {
         unset($this->factories[$id], $this->builders[$id]);
 
-        /** @var class-string<T> $id */
-        $this->setValueOrThrow($id, $value);
+        self::assertType($id, $value);
+
+        $this->instances[$id] = $value;
     }
 
     /**
@@ -145,21 +153,27 @@ class Container implements ContainerInterface
      */
     private function setValueOrThrow(string $id, object $value): object
     {
+        self::assertType($id, $value);
+
+        $this->values[$id] = $value;
+
+        /** @var T */
+        return $value;
+    }
+
+    /**
+     * Validates type for class-string IDs only; non-class IDs skip validation.
+     */
+    private static function assertType(string $id, object $value): void
+    {
         // Break the contract to skip the type check for IDs that do not look like a valid namespaced PHP class name
         if (str_contains($id, '.') || !str_contains($id, '\\')) {
-            $this->values[$id] = $value;
-
-            /** @var T */
-            return $value;
+            return;
         }
 
         if (!$value instanceof $id) {
             throw new Exception(sprintf('Expected instance of %s, got %s', $id, get_class($value)));
         }
-
-        $this->values[$id] = $value;
-
-        return $value;
     }
 
     /**
@@ -172,6 +186,10 @@ class Container implements ContainerInterface
     {
         if (array_key_exists($id, $this->values)) {
             return $this->values[$id];
+        }
+
+        if (array_key_exists($id, $this->instances)) {
+            return $this->instances[$id];
         }
 
         if (array_key_exists($id, $this->builders)) {
@@ -299,7 +317,7 @@ class Container implements ContainerInterface
     private function providersForType(string $type): array
     {
         /** @var list<class-string<object>> */
-        return take($this->factories, $this->builders)
+        return take($this->factories, $this->builders, $this->instances)
             ->keys()
             ->filter(static fn(string $id) => is_a($id, $type, true))
             ->toList();
