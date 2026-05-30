@@ -410,6 +410,8 @@ class ContainerTest extends TestCase
         $container = new Container();
         $container->inject(NamedObjectInterface::class, $this->createMock(NamedObjectInterface::class));
 
+        $this->assertInstanceOf(NamedObjectInterface::class, $container->get(NamedObjectInterface::class));
+
         $object = $container->get(BuiltinDefaultDependent::class);
 
         $this->assertSame(42, $object->getId());
