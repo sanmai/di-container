@@ -310,7 +310,7 @@ class Container implements ContainerInterface
     private function providersForType(string $type): array
     {
         /** @var list<class-string<object>> */
-        return take($this->factories + $this->builders + $this->prebuilt)
+        return take($this->factories, $this->builders, $this->prebuilt)
             ->keys()
             ->filter(static fn(string $id) => is_a($id, $type, true))
             ->toList();
