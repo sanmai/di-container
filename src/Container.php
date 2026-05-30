@@ -286,10 +286,10 @@ class Container implements ContainerInterface
         /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
 
-        // Defer to a default value for classes that cannot be reflected
         try {
             $reflectionClass = new ReflectionClass($paramTypeName);
         } catch (ReflectionException $e) {
+            // Defer to a default value for classes that cannot be reflected
             yield from self::resolveDefaultValue($parameter);
             return;
         }
