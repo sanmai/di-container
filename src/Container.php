@@ -266,21 +266,21 @@ class Container implements ContainerInterface
         // Look for a factory that can create an instance of an interface or abstract class
         $matchingTypes = $this->providersForType($paramTypeName);
 
+        // Found nothing, but there's a default value - use that
+        if (
+            [] === $matchingTypes
+            && $parameter->isDefaultValueAvailable()
+        ) {
+            yield $parameter->getDefaultValue();
+        }
+
         // We expect exactly one factory to match the type, otherwise we cannot resolve the parameter
-        if (count($matchingTypes) > 1) {
+        if (1 !== count($matchingTypes)) {
             return;
         }
 
         // Happy path, found what we need
-        if (1 === count($matchingTypes)) {
-            yield $this->get(reset($matchingTypes));
-            return;
-        }
-
-        // Found nothing, but there's a default value - use that
-        if ($parameter->isDefaultValueAvailable()) {
-            yield $parameter->getDefaultValue();
-        }
+        yield $this->get(reset($matchingTypes));
     }
 
     /**
