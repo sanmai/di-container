@@ -40,6 +40,9 @@ class ComplexObject implements NamedObjectInterface
 {
     public const DEFAULT_ID = 42;
 
+    /**
+     * @param array<mixed>|null $optionalList
+     */
     public function __construct(
         private readonly string $name,
         private readonly SimpleObject $object,
