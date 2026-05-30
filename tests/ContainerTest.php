@@ -40,6 +40,7 @@ namespace Tests\DIContainer;
 
 use DIContainer\Container;
 use DIContainer\Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -50,6 +51,7 @@ use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
+use Tests\DIContainer\Fixtures\NameNeederOptional;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
@@ -163,7 +165,14 @@ class ContainerTest extends TestCase
         $container->get(ComplexDepender::class);
     }
 
-    public function testItThrowsIfMultipleBuilders(): void
+    public static function provideNameNeeders(): iterable
+    {
+        yield [NameNeeder::class];
+        yield [NameNeederOptional::class];
+    }
+
+    #[DataProvider('provideNameNeeders')]
+    public function testItThrowsIfMultipleBuilders(string $nameNeeder): void
     {
         $container = new Container([
             NamedObjectInterface::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
@@ -171,7 +180,7 @@ class ContainerTest extends TestCase
         ]);
 
         $this->expectExceptionMessage('Unknown service');
-        $container->get(NameNeeder::class);
+        $container->get($nameNeeder);
     }
 
     public function testItIgnoresRedundantBuilders(): void
