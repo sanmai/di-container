@@ -50,7 +50,6 @@ use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
-use Tests\DIContainer\Fixtures\OptionalBuiltinDependent;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
