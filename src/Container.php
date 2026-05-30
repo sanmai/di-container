@@ -300,11 +300,10 @@ class Container implements ContainerInterface
             yield $this->get(reset($matchingTypes));
         }
 
-        // But we should also consider default values if present
-        yield from match ($matchingTypes) {
-            [] => self::resolveDefaultValue($parameter),
-            default => [],
-        };
+        // But we should also consider default values if present and no default provider
+        if ([] === $matchingTypes) {
+            yield from self::resolveDefaultValue($parameter);
+        }
     }
 
     /**
