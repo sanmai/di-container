@@ -285,15 +285,10 @@ class Container implements ContainerInterface
             throw new Exception('Composite types are not supported');
         }
 
-        // Only attempt to fully resolve non-built-in types (internal/external classes/interfaces)
-        if ($paramType->isBuiltin()) {
-            return $this->resolveDefaultValue($parameter);
-        }
-
         /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
 
-        // Defer to a default value for classes that cannot be reflected
+        // Defer to a default value for built-in types and classes that cannot be reflected
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
             return $this->resolveDefaultValue($parameter);
         }
