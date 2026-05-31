@@ -251,35 +251,9 @@ class Container implements ContainerInterface
         return $reflectionClass->newInstanceArgs($resolvedArguments);
     }
 
-    private function notMissing(mixed $value): bool
-    {
-        return $this->missing !== $value;
-    }
-
-    /**
-     * Resolve each parameter to an argument, dropping unresolved.
-     *
-     * @param list<ReflectionParameter> $parameters
-     * @return list<mixed>
-     */
-    private function resolveArguments(array $parameters): array
-    {
-        return take($parameters)
-            ->cast($this->findParameterValue(...))
-            ->select($this->notMissing(...))
-            ->toList();
-    }
-
-    private function resolveDefaultValue(ReflectionParameter $parameter): mixed
-    {
-        return match ($parameter->isDefaultValueAvailable()) {
-            true => $parameter->getDefaultValue(),
-            default => $this->missing,
-        };
-    }
-
     /**
      * Invoke a factory callable with autowired parameters.
+     * @param callable(mixed...):object $factory
      */
     private function invokeFactory(callable $factory): object
     {
@@ -289,13 +263,37 @@ class Container implements ContainerInterface
         $args = $this->resolveArguments($params);
 
         // Fall back to passing container for backward compatibility
-        if (count($args) !== count($params)) {
-            /** @var object */
-            return $factory($this);
-        }
+        return match (count($params)) {
+            count($args) => $factory(...$args),
+            default => $factory($this),
+        };
+    }
 
-        /** @var object */
-        return $factory(...$args);
+    /**
+     * Resolve each parameter to an argument, dropping unresolved.
+     *
+     * @param iterable<ReflectionParameter> $parameters
+     * @return list<mixed>
+     */
+    private function resolveArguments(iterable $parameters): array
+    {
+        return take($parameters)
+            ->cast($this->findParameterValue(...))
+            ->select($this->notMissing(...))
+            ->toList();
+    }
+
+    private function notMissing(mixed $value): bool
+    {
+        return $this->missing !== $value;
+    }
+
+    private function resolveDefaultValue(ReflectionParameter $parameter): mixed
+    {
+        return match ($parameter->isDefaultValueAvailable()) {
+            true => $parameter->getDefaultValue(),
+            default => $this->missing,
+        };
     }
 
     /**
