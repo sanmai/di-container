@@ -34,34 +34,34 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace Tests\DIContainer\Fixtures;
 
-class ComplexObject implements NamedObjectInterface
+/**
+ * Scalar parameter with a default value sits before an optional injectable dependency,
+ * so the container must pick up the default value to be able to resolve the optional.
+ */
+class BuiltinDefaultDependent
 {
-    public const DEFAULT_ID = 42;
-
-    /**
-     * @param array<mixed>|null $optionalList
-     */
     public function __construct(
-        private readonly string $name,
-        private readonly SimpleObject $object,
-        private int $optionalId = self::DEFAULT_ID,
-        ?array $optionalList = null,
+        private readonly SimpleObject $required,
+        private readonly int $id = 42,
+        private readonly ?NamedObjectInterface $named = null,
     ) {}
 
-    public function getName(): string
+    public function getRequired(): SimpleObject
     {
-        return $this->name;
-    }
-
-    public function getObject(): SimpleObject
-    {
-        return $this->object;
+        return $this->required;
     }
 
     public function getId(): int
     {
-        return $this->optionalId;
+        return $this->id;
+    }
+
+    public function getNamed(): ?NamedObjectInterface
+    {
+        return $this->named;
     }
 }

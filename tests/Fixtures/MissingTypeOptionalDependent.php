@@ -34,34 +34,23 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace Tests\DIContainer\Fixtures;
 
-class ComplexObject implements NamedObjectInterface
-{
-    public const DEFAULT_ID = 42;
+use Tests\DIContainer\Fixtures\Absent\AbsentInterface;
 
-    /**
-     * @param array<mixed>|null $optionalList
-     */
+/**
+ * Optional dependency whose type cannot be loaded at all.
+ */
+class MissingTypeOptionalDependent
+{
     public function __construct(
-        private readonly string $name,
-        private readonly SimpleObject $object,
-        private int $optionalId = self::DEFAULT_ID,
-        ?array $optionalList = null,
+        private readonly ?AbsentInterface $optional = null,
     ) {}
 
-    public function getName(): string
+    public function getOptional(): ?object
     {
-        return $this->name;
-    }
-
-    public function getObject(): SimpleObject
-    {
-        return $this->object;
-    }
-
-    public function getId(): int
-    {
-        return $this->optionalId;
+        return $this->optional;
     }
 }

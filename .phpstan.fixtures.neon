@@ -4,3 +4,4 @@ parameters:
         - tests/Fixtures
     ignoreErrors:
         - identifier: constructor.unusedParameter
+        - identifier: class.notFound

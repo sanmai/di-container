@@ -36,32 +36,7 @@
 
 namespace Tests\DIContainer\Fixtures;
 
-class ComplexObject implements NamedObjectInterface
+class NameNeederOptional
 {
-    public const DEFAULT_ID = 42;
-
-    /**
-     * @param array<mixed>|null $optionalList
-     */
-    public function __construct(
-        private readonly string $name,
-        private readonly SimpleObject $object,
-        private int $optionalId = self::DEFAULT_ID,
-        ?array $optionalList = null,
-    ) {}
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function getObject(): SimpleObject
-    {
-        return $this->object;
-    }
-
-    public function getId(): int
-    {
-        return $this->optionalId;
-    }
+    public function __construct(?NamedObjectInterface $namedObject = null) {}
 }

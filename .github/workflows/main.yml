@@ -39,7 +39,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          coverage: pcov
+          coverage: none
+          ini-values: opcache.enable_cli=1, opcache.jit=tracing, opcache.jit_buffer_size=64M
           tools: composer:v2
 
       - name: Cache dependencies
@@ -66,13 +67,6 @@ jobs:
       - name: Execute tests
         run: |
           make ci-test
-
-      - name: Upload coverage report
-        continue-on-error: true
-        env:
-          COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          php vendor/bin/php-coveralls -v
 
   analyze:
     name: Static Analysis and Validation
@@ -127,3 +121,10 @@ jobs:
       - name: Static Analysis
         run: |
           make ci-analyze --keep-going
+
+      - name: Upload coverage to Coveralls
+        continue-on-error: true
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          php vendor/bin/php-coveralls -v

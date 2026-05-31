@@ -40,6 +40,7 @@ namespace Tests\DIContainer;
 
 use DIContainer\Container;
 use DIContainer\Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -51,6 +52,10 @@ use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
 use Tests\DIContainer\Fixtures\NameProvider;
+use Tests\DIContainer\Fixtures\BuiltinDefaultDependent;
+use Tests\DIContainer\Fixtures\MissingTypeOptionalDependent;
+use Tests\DIContainer\Fixtures\NameNeederOptional;
+use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
 use Tests\DIContainer\Fixtures\VariadicConstructor;
@@ -86,6 +91,8 @@ class ContainerTest extends TestCase
         $this->assertSame('hello', $object->getName());
 
         $this->assertSame($container->get(SimpleObject::class), $object->getObject());
+
+        $this->assertSame(ComplexObject::DEFAULT_ID, $object->getId());
     }
 
     public function testItResolvesInterfaceBuilders(): void
@@ -161,7 +168,14 @@ class ContainerTest extends TestCase
         $container->get(ComplexDepender::class);
     }
 
-    public function testItThrowsIfMultipleBuilders(): void
+    public static function provideNameNeeders(): iterable
+    {
+        yield [NameNeeder::class];
+        yield [NameNeederOptional::class];
+    }
+
+    #[DataProvider('provideNameNeeders')]
+    public function testItThrowsIfMultipleBuilders(string $nameNeeder): void
     {
         $container = new Container([
             NamedObjectInterface::class => static fn(Container $container) => $container->get(ComplexObjectBuilder::class)->build(),
@@ -169,7 +183,7 @@ class ContainerTest extends TestCase
         ]);
 
         $this->expectExceptionMessage('Unknown service');
-        $container->get(NameNeeder::class);
+        $container->get($nameNeeder);
     }
 
     public function testItIgnoresRedundantBuilders(): void
@@ -339,5 +353,131 @@ class ContainerTest extends TestCase
         $result = $container->withSelfFactory();
 
         $this->assertInstanceOf(SimpleObject::class, $result->get(SimpleObject::class));
+    }
+
+    public function testInjectPreBuiltObject(): void
+    {
+        $container = new Container();
+        $injected = $this->createMock(NamedObjectInterface::class);
+        $injected->method('getName')->willReturn('injected');
+
+        $container->inject(NamedObjectInterface::class, $injected);
+
+        // The injected instance must be discoverable when autowiring a dependent
+        $this->assertSame('injected', $container->get(NameNeeder::class)->getName());
+    }
+
+    public function testPreBuiltObjectDependency(): void
+    {
+        $injected = $this->createMock(NamedObjectInterface::class);
+        $injected->expects($this->once())
+            ->method('getName')
+            ->willReturn('injected');
+
+        $container = new Container();
+        $container->inject(NamedObjectInterface::class, $injected);
+
+        $this->assertSame('injected', $container->get(NameNeeder::class)->getName());
+    }
+
+    public function testInjectTypeMismatchThrows(): void
+    {
+        $container = new Container();
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessageMatches('/Expected instance of .*DependentObject, got .*SimpleObject/');
+
+        $container->inject(DependentObject::class, new SimpleObject());
+    }
+
+    public function testInjectOverridesBind(): void
+    {
+        $container = new Container();
+        $container->bind(SimpleObject::class, static fn() => new SimpleObject());
+
+        $injected = new SimpleObject();
+        $container->inject(SimpleObject::class, $injected);
+
+        $this->assertSame($injected, $container->get(SimpleObject::class));
+    }
+
+    public function testInjectOverridesResolvedService(): void
+    {
+        $container = new Container();
+        $built = $container->get(SimpleObject::class);
+
+        $injected = new SimpleObject();
+        $container->inject(SimpleObject::class, $injected);
+
+        $this->assertSame($injected, $container->get(SimpleObject::class));
+        $this->assertNotSame($built, $container->get(SimpleObject::class));
+    }
+
+    public function testBindOverridesInject(): void
+    {
+        $container = new Container();
+        $container->inject(SimpleObject::class, new SimpleObject());
+        $injected = $container->get(SimpleObject::class);
+
+        $rebound = new SimpleObject();
+        $container->bind(SimpleObject::class, static fn() => $rebound);
+
+        $this->assertSame($rebound, $container->get(SimpleObject::class));
+        $this->assertNotSame($injected, $container->get(SimpleObject::class));
+    }
+
+    public function testInjectSingletonBehavior(): void
+    {
+        $container = new Container();
+        $object = new SimpleObject();
+
+        $container->inject(SimpleObject::class, $object);
+
+        $this->assertSame($object, $container->get(SimpleObject::class));
+        $this->assertSame($object, $container->get(SimpleObject::class));
+    }
+
+    public function testItResolvesOptionalNullableInterfaceWithDefault(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(OptionalInterfaceDependent::class);
+
+        $this->assertInstanceOf(OptionalInterfaceDependent::class, $object);
+        $this->assertInstanceOf(SimpleObject::class, $object->getRequired());
+        $this->assertNull($object->getOptional());
+    }
+
+    public function testItResolvesOptionalDependencyWithUnloadableType(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(MissingTypeOptionalDependent::class);
+
+        $this->assertInstanceOf(MissingTypeOptionalDependent::class, $object);
+        $this->assertNull($object->getOptional());
+    }
+
+    public function testItResolvesOptionalBuiltinWithDefault(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(BuiltinDefaultDependent::class);
+
+        $this->assertSame(42, $object->getId());
+        $this->assertNull($object->getNamed());
+    }
+
+    public function testItBindsAfterSkippingScalarDefault(): void
+    {
+        $container = new Container();
+
+        $injected = $this->createMock(NamedObjectInterface::class);
+        $container->inject(NamedObjectInterface::class, $injected);
+
+        $object = $container->get(BuiltinDefaultDependent::class);
+
+        $this->assertSame(42, $object->getId());
+        $this->assertSame($injected, $object->getNamed());
     }
 }

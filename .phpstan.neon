@@ -6,3 +6,4 @@ parameters:
     reportUnmatchedIgnoredErrors: false
     ignoreErrors:
         - identifier: constructor.unusedParameter
+        - message: "#MissingTypeOptionalDependent.*AbsentInterface#"
