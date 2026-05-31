@@ -52,6 +52,7 @@ use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
 use Tests\DIContainer\Fixtures\NameProvider;
+use Tests\DIContainer\Fixtures\NameProvidingContainer;
 use Tests\DIContainer\Fixtures\BuiltinDefaultDependent;
 use Tests\DIContainer\Fixtures\MissingTypeOptionalDependent;
 use Tests\DIContainer\Fixtures\NameNeederOptional;
@@ -313,6 +314,16 @@ class ContainerTest extends TestCase
 
         $this->assertSame($custom, $container->get(Container::class));
         $this->assertSame($container, $container->get(ContainerInterface::class));
+    }
+
+    public function testRegisteredProviderWinsOverContainerSelfType(): void
+    {
+        $container = new NameProvidingContainer([
+            NamedObjectInterface::class => static fn() => new NameProvider(),
+        ]);
+
+        $this->assertSame('hello', $container->get(NameNeeder::class)->getName());
+        $this->assertNotSame('the container itself', $container->get(NameNeeder::class)->getName());
     }
 
     public function testSubclassCanUseCallableWithStaticType(): void
