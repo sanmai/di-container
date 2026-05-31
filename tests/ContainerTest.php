@@ -323,6 +323,7 @@ class ContainerTest extends TestCase
         ]);
 
         $this->assertSame('hello', $container->get(NameNeeder::class)->getName());
+        $this->assertNotSame('the container itself', $container->get(NameNeeder::class)->getName());
     }
 
     public function testSubclassCanUseCallableWithStaticType(): void
