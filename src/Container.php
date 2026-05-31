@@ -288,11 +288,6 @@ class Container implements ContainerInterface
         /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
 
-        // If requesting the container itself, return $this
-        if ($this instanceof $paramTypeName) {
-            return $this;
-        }
-
         // Defer to a default value for built-in types and classes that cannot be reflected
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
             return $this->resolveDefaultValue($parameter);
