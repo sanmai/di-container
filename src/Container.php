@@ -241,7 +241,7 @@ class Container implements ContainerInterface
 
         $resolvedArguments = take($constructor->getParameters())
             ->cast($this->resolveParameterCandidates(...))
-            ->cast(self::firstCandidate(...))
+            ->cast($this->firstCandidate(...))
             ->select($this->notNothing(...))
             ->toList();
 
@@ -297,7 +297,7 @@ class Container implements ContainerInterface
 
         // Only attempt to fully resolve non-built-in types (internal/external classes/interfaces)
         if ($paramType->isBuiltin()) {
-            yield from self::resolveDefaultValue($parameter);
+            yield from $this->resolveDefaultValue($parameter);
         }
 
         /** @var class-string $paramTypeName */
@@ -305,7 +305,7 @@ class Container implements ContainerInterface
 
         // Defer to a default value for classes that cannot be reflected
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
-            yield from self::resolveDefaultValue($parameter);
+            yield from $this->resolveDefaultValue($parameter);
         }
 
         // Found an instantiable class, done
@@ -323,7 +323,7 @@ class Container implements ContainerInterface
 
         // But we should also consider default values if present and no default provider
         if ([] === $matchingTypes) {
-            yield from self::resolveDefaultValue($parameter);
+            yield from $this->resolveDefaultValue($parameter);
         }
 
         yield $this->nothing;
