@@ -54,7 +54,6 @@ use function Pipeline\take;
 use function reset;
 use function sprintf;
 use function str_contains;
-use function in_array;
 use function class_exists;
 use function interface_exists;
 
@@ -313,11 +312,6 @@ class Container implements ContainerInterface
 
 
         $paramTypeName = $paramType->getName();
-
-        // Special type names (self, static, parent) cannot be resolved for closures
-        if (in_array($paramTypeName, ['self', 'static', 'parent'], true)) {
-            return $this->missing;
-        }
 
         // If requesting the container itself, return $this
         if ($this instanceof $paramTypeName) {
