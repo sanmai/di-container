@@ -77,6 +77,9 @@ class Container implements ContainerInterface
      */
     private array $builders = [];
 
+    /** Placeholder marking an unresolved parameter */
+    private readonly object $missing;
+
     /**
      * @param iterable<class-string<object>, callable|class-string<Builder<object>>> $values
      * @param iterable<non-empty-string, callable|class-string<Builder<object>>> $bindings
@@ -85,6 +88,8 @@ class Container implements ContainerInterface
     {
         // Cache the value letting a builder override it
         $this->values[ContainerInterface::class] = $this;
+
+        $this->missing = new class {};
 
         foreach ($values as $id => $value) {
             $this->set($id, $value);
@@ -235,7 +240,8 @@ class Container implements ContainerInterface
         }
 
         $resolvedArguments = take($constructor->getParameters())
-            ->map($this->resolveParameter(...))
+            ->cast($this->findParameterValue(...))
+            ->select($this->notMissing(...))
             ->toList();
 
         // Check if we identified all parameters for the service
@@ -246,29 +252,30 @@ class Container implements ContainerInterface
         return $reflectionClass->newInstanceArgs($resolvedArguments);
     }
 
-    /**
-     * @return iterable<array-key, mixed>
-     */
-    private static function resolveDefaultValue(ReflectionParameter $parameter): iterable
+    private function notMissing(mixed $value): bool
     {
-        if (!$parameter->isDefaultValueAvailable()) {
-            return;
-        }
+        return $this->missing !== $value;
+    }
 
-        yield $parameter->getDefaultValue();
+    private function resolveDefaultValue(ReflectionParameter $parameter): mixed
+    {
+        return match ($parameter->isDefaultValueAvailable()) {
+            true => $parameter->getDefaultValue(),
+            default => $this->missing,
+        };
     }
 
     /**
-     * Builds a potentially incomplete list of arguments for a constructor; as a list of arguments may
-     * contain null values, we use a generator that can yield none or one value as an option type.
+     * Returns a possible argument value for the constructor; it can return a specific computed
+     * value just as well as a placeholder for the missing value.
      *
-     * @return iterable<array-key, mixed>
+     * @return mixed
      */
-    private function resolveParameter(ReflectionParameter $parameter): iterable
+    private function findParameterValue(ReflectionParameter $parameter): mixed
     {
         // Variadic parameters need hand-weaving
         if ($parameter->isVariadic()) {
-            return;
+            return $this->missing;
         }
 
         $paramType = $parameter->getType();
@@ -278,26 +285,17 @@ class Container implements ContainerInterface
             throw new Exception('Composite types are not supported');
         }
 
-        // Only attempt to fully resolve non-built-in types (internal/external classes/interfaces)
-        if ($paramType->isBuiltin()) {
-            yield from self::resolveDefaultValue($parameter);
-            return;
-        }
-
         /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
 
-        // Defer to a default value for classes that cannot be reflected
+        // Defer to a default value for built-in types and classes that cannot be reflected
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
-            yield from self::resolveDefaultValue($parameter);
-            return;
+            return $this->resolveDefaultValue($parameter);
         }
 
         // Found an instantiable class, done
         if ((new ReflectionClass($paramTypeName))->isInstantiable()) {
-            yield $this->get($paramTypeName);
-
-            return;
+            return $this->get($paramTypeName);
         }
 
         // Look for a factory that can create an instance of an interface or abstract class
@@ -305,13 +303,15 @@ class Container implements ContainerInterface
 
         // We expect exactly one factory to match the type to resolve a parameter unambiguously
         if (1 === count($matchingTypes)) {
-            yield $this->get(reset($matchingTypes));
+            return $this->get(reset($matchingTypes));
         }
 
         // But we should also consider default values if present and no default provider
         if ([] === $matchingTypes) {
-            yield from self::resolveDefaultValue($parameter);
+            return $this->resolveDefaultValue($parameter);
         }
+
+        return $this->missing;
     }
 
     /**
