@@ -241,10 +241,7 @@ class Container implements ContainerInterface
             return $reflectionClass->newInstance();
         }
 
-        $resolvedArguments = take($constructor->getParameters())
-            ->cast($this->findParameterValue(...))
-            ->select($this->notMissing(...))
-            ->toList();
+        $resolvedArguments = $this->resolveArguments($constructor->getParameters());
 
         // Check if we identified all parameters for the service
         if (count($resolvedArguments) !== $constructor->getNumberOfParameters()) {
@@ -257,6 +254,20 @@ class Container implements ContainerInterface
     private function notMissing(mixed $value): bool
     {
         return $this->missing !== $value;
+    }
+
+    /**
+     * Resolve each parameter to an argument, dropping unresolved.
+     *
+     * @param list<ReflectionParameter> $parameters
+     * @return list<mixed>
+     */
+    private function resolveArguments(array $parameters): array
+    {
+        return take($parameters)
+            ->cast($this->findParameterValue(...))
+            ->select($this->notMissing(...))
+            ->toList();
     }
 
     private function resolveDefaultValue(ReflectionParameter $parameter): mixed
@@ -275,10 +286,7 @@ class Container implements ContainerInterface
         $reflection = new ReflectionFunction(Closure::fromCallable($factory));
         $params = $reflection->getParameters();
 
-        $args = take($params)
-            ->cast($this->findParameterValue(...))
-            ->select($this->notMissing(...))
-            ->toList();
+        $args = $this->resolveArguments($params);
 
         // Fall back to passing container for backward compatibility
         if (count($args) !== count($params)) {
@@ -310,16 +318,13 @@ class Container implements ContainerInterface
             throw new Exception('Composite types are not supported');
         }
 
-
+        /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
 
         // If requesting the container itself, return $this
         if ($this instanceof $paramTypeName) {
             return $this;
         }
-
-        /** @var class-string $paramTypeName */
-        $paramTypeName = $paramType->getName();
 
         // Defer to a default value for built-in types and classes that cannot be reflected
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
