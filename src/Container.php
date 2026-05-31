@@ -241,7 +241,7 @@ class Container implements ContainerInterface
         }
 
         $resolvedArguments = take($constructor->getParameters())
-            ->cast($this->resolveParameterCandidates(...))
+            ->cast($this->findParameterValues(...))
             ->cast($this->firstCandidate(...))
             ->select($this->notNothing(...))
             ->toList();
@@ -279,7 +279,7 @@ class Container implements ContainerInterface
      *
      * @return Iterator<array-key, mixed>
      */
-    private function findParameterValue(ReflectionParameter $parameter): Iterator
+    private function findParameterValues(ReflectionParameter $parameter): Iterator
     {
         // Variadic parameters need hand-weaving
         if ($parameter->isVariadic()) {
