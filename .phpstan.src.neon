@@ -4,4 +4,3 @@ parameters:
         - src
     ignoreErrors:
         - message: '#Method .*::get\(\) should return T of object but returns object.#'
-        - message: '#Unable to resolve the template type TMapKey#'

@@ -42,6 +42,7 @@ use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
+use Iterator;
 
 use function array_key_exists;
 use function count;
@@ -239,7 +240,8 @@ class Container implements ContainerInterface
         }
 
         $resolvedArguments = take($constructor->getParameters())
-            ->map($this->resolveParameter(...))
+            ->cast($this->resolveParameterCandidates(...))
+            ->cast(self::firstCandidate(...))
             ->select($this->notNothing(...))
             ->toList();
 
@@ -249,6 +251,11 @@ class Container implements ContainerInterface
         }
 
         return $reflectionClass->newInstanceArgs($resolvedArguments);
+    }
+
+    private static function firstCandidate(Iterator $iterator): mixed
+    {
+        return $iterator->current();
     }
 
     private function notNothing(mixed $value): bool
@@ -267,26 +274,18 @@ class Container implements ContainerInterface
         };
     }
 
-    private function resolveParameter(ReflectionParameter $parameter): iterable
-    {
-        foreach ($this->resolveParameterX($parameter) as $resolvedArgument) {
-            yield $resolvedArgument;
-            break;
-        }
-    }
-
-
     /**
-     * Builds a potentially incomplete list of arguments for a constructor; as a list of arguments may
-     * contain null values, we use a generator that can yield none or one value as an option type.
+     * Builds a potentially incomplete list of argument value candidates for the constructor; as a list
+     * of arguments may contain null values, we use a generator that can yield a canary nothing value or
+     * a specific computed value.
      *
-     * @return iterable<array-key, mixed>
+     * @return Iterator<array-key, mixed>
      */
-    private function resolveParameterX(ReflectionParameter $parameter): iterable
+    private function resolveParameterCandidates(ReflectionParameter $parameter): Iterator
     {
         // Variadic parameters need hand-weaving
         if ($parameter->isVariadic()) {
-            return;
+            yield $this->nothing;
         }
 
         $paramType = $parameter->getType();
@@ -326,6 +325,8 @@ class Container implements ContainerInterface
         if ([] === $matchingTypes) {
             yield from self::resolveDefaultValue($parameter);
         }
+
+        yield $this->nothing;
     }
 
     /**
