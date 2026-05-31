@@ -77,6 +77,8 @@ class Container implements ContainerInterface
      */
     private array $builders = [];
 
+    private readonly object $nothing;
+
     /**
      * @param iterable<class-string<object>, callable|class-string<Builder<object>>> $values
      * @param iterable<non-empty-string, callable|class-string<Builder<object>>> $bindings
@@ -93,6 +95,8 @@ class Container implements ContainerInterface
         foreach ($bindings as $id => $binding) {
             $this->bind($id, $binding);
         }
+
+        $this->nothing = new class {};
     }
 
     /**
@@ -236,6 +240,7 @@ class Container implements ContainerInterface
 
         $resolvedArguments = take($constructor->getParameters())
             ->map($this->resolveParameter(...))
+            ->select($this->notNothing(...))
             ->toList();
 
         // Check if we identified all parameters for the service
@@ -246,17 +251,30 @@ class Container implements ContainerInterface
         return $reflectionClass->newInstanceArgs($resolvedArguments);
     }
 
+    private function notNothing(mixed $value): bool
+    {
+        return $this->nothing !== $value;
+    }
+
     /**
      * @return iterable<array-key, mixed>
      */
-    private static function resolveDefaultValue(ReflectionParameter $parameter): iterable
+    private function resolveDefaultValue(ReflectionParameter $parameter): iterable
     {
-        if (!$parameter->isDefaultValueAvailable()) {
-            return;
-        }
-
-        yield $parameter->getDefaultValue();
+        yield match ($parameter->isDefaultValueAvailable()) {
+            true => $parameter->getDefaultValue(),
+            default => $this->nothing,
+        };
     }
+
+    private function resolveParameter(ReflectionParameter $parameter): iterable
+    {
+        foreach ($this->resolveParameterX($parameter) as $resolvedArgument) {
+            yield $resolvedArgument;
+            break;
+        }
+    }
+
 
     /**
      * Builds a potentially incomplete list of arguments for a constructor; as a list of arguments may
@@ -264,7 +282,7 @@ class Container implements ContainerInterface
      *
      * @return iterable<array-key, mixed>
      */
-    private function resolveParameter(ReflectionParameter $parameter): iterable
+    private function resolveParameterX(ReflectionParameter $parameter): iterable
     {
         // Variadic parameters need hand-weaving
         if ($parameter->isVariadic()) {
@@ -281,7 +299,6 @@ class Container implements ContainerInterface
         // Only attempt to fully resolve non-built-in types (internal/external classes/interfaces)
         if ($paramType->isBuiltin()) {
             yield from self::resolveDefaultValue($parameter);
-            return;
         }
 
         /** @var class-string $paramTypeName */
@@ -290,14 +307,11 @@ class Container implements ContainerInterface
         // Defer to a default value for classes that cannot be reflected
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
             yield from self::resolveDefaultValue($parameter);
-            return;
         }
 
         // Found an instantiable class, done
         if ((new ReflectionClass($paramTypeName))->isInstantiable()) {
             yield $this->get($paramTypeName);
-
-            return;
         }
 
         // Look for a factory that can create an instance of an interface or abstract class
