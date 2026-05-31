@@ -318,9 +318,6 @@ class ContainerTest extends TestCase
 
     public function testRegisteredProviderWinsOverContainerSelfType(): void
     {
-        // A container subclass may itself satisfy a domain interface that also
-        // has a registered provider. The explicit registration must win over
-        // the container injecting itself into the dependent service.
         $container = new NameProvidingContainer([
             NamedObjectInterface::class => static fn() => new NameProvider(),
         ]);
