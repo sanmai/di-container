@@ -78,6 +78,7 @@ class Container implements ContainerInterface
      */
     private array $builders = [];
 
+    /** Parameter value sentinel placeholder */
     private readonly object $nothing;
 
     /**
@@ -89,6 +90,8 @@ class Container implements ContainerInterface
         // Cache the value letting a builder override it
         $this->values[ContainerInterface::class] = $this;
 
+        $this->nothing = new class {};
+
         foreach ($values as $id => $value) {
             $this->set($id, $value);
         }
@@ -96,8 +99,6 @@ class Container implements ContainerInterface
         foreach ($bindings as $id => $binding) {
             $this->bind($id, $binding);
         }
-
-        $this->nothing = new class {};
     }
 
     /**
@@ -263,25 +264,22 @@ class Container implements ContainerInterface
         return $this->nothing !== $value;
     }
 
-    /**
-     * @return iterable<array-key, mixed>
-     */
-    private function resolveDefaultValue(ReflectionParameter $parameter): iterable
+    private function resolveDefaultValue(ReflectionParameter $parameter): mixed
     {
-        yield match ($parameter->isDefaultValueAvailable()) {
+        return match ($parameter->isDefaultValueAvailable()) {
             true => $parameter->getDefaultValue(),
             default => $this->nothing,
         };
     }
 
     /**
-     * Builds a potentially incomplete list of argument value candidates for the constructor; as a list
-     * of arguments may contain null values, we use a generator that can yield a canary nothing value or
-     * a specific computed value.
+     * Builds a potentially incomplete list of possible argument values for the constructor; as a list
+     * of arguments may contain null values, we use a generator that can yield a specific computed value
+     * just as well as a canary nothing value.
      *
      * @return Iterator<array-key, mixed>
      */
-    private function resolveParameterCandidates(ReflectionParameter $parameter): Iterator
+    private function findParameterValue(ReflectionParameter $parameter): Iterator
     {
         // Variadic parameters need hand-weaving
         if ($parameter->isVariadic()) {
@@ -297,7 +295,7 @@ class Container implements ContainerInterface
 
         // Only attempt to fully resolve non-built-in types (internal/external classes/interfaces)
         if ($paramType->isBuiltin()) {
-            yield from $this->resolveDefaultValue($parameter);
+            yield $this->resolveDefaultValue($parameter);
         }
 
         /** @var class-string $paramTypeName */
@@ -305,7 +303,7 @@ class Container implements ContainerInterface
 
         // Defer to a default value for classes that cannot be reflected
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
-            yield from $this->resolveDefaultValue($parameter);
+            yield $this->resolveDefaultValue($parameter);
         }
 
         // Found an instantiable class, done
@@ -323,7 +321,7 @@ class Container implements ContainerInterface
 
         // But we should also consider default values if present and no default provider
         if ([] === $matchingTypes) {
-            yield from $this->resolveDefaultValue($parameter);
+            yield $this->resolveDefaultValue($parameter);
         }
 
         yield $this->nothing;
