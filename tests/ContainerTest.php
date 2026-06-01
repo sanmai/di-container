@@ -60,6 +60,7 @@ use Tests\DIContainer\Fixtures\NameNeederOptional;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
+use Tests\DIContainer\Fixtures\TypedVariadicConstructor;
 use Tests\DIContainer\Fixtures\VariadicConstructor;
 use Closure;
 use SplFileInfo;
@@ -158,6 +159,16 @@ class ContainerTest extends TestCase
         $this->expectExceptionMessage('Unknown service');
 
         $container->get(VariadicConstructor::class);
+    }
+
+    public function testItResolvesTypedVariadicAsSingleInstance(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(TypedVariadicConstructor::class);
+
+        $this->assertInstanceOf(TypedVariadicConstructor::class, $object);
+        $this->assertEquals([new SimpleObject()], $object->getObjects());
     }
 
     public function testItThrowsOnClassesWithCompositeArgumentsWithoutDefault(): void
