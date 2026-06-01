@@ -280,7 +280,7 @@ class Container implements ContainerInterface
      */
     private function findParameterValue(ReflectionParameter $parameter): mixed
     {
-        // Variadic parameters imply collections, so we ignore them
+        // Variadic parameters imply collections, which we do not provide, for now
         if ($parameter->isVariadic()) {
             return $this->missing;
         }

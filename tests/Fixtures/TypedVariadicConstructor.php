@@ -39,20 +39,27 @@ declare(strict_types=1);
 namespace Tests\DIContainer\Fixtures;
 
 /**
- * A typed variadic reports its element type as a named type, so it no longer
- * short-circuits the way an untyped variadic does.
+ * A required dependency followed by a typed variadic of the same type: the
+ * container must resolve the required one and leave the variadic empty.
  */
 class TypedVariadicConstructor
 {
-    /** @var list<SimpleObject> */
+    /** @var array<array-key, SimpleObject> */
     private readonly array $objects;
 
-    public function __construct(SimpleObject ...$objects)
-    {
+    public function __construct(
+        private readonly SimpleObject $object,
+        SimpleObject ...$objects,
+    ) {
         $this->objects = $objects;
     }
 
-    /** @return list<SimpleObject> */
+    public function getObject(): SimpleObject
+    {
+        return $this->object;
+    }
+
+    /** @return array<array-key, SimpleObject> */
     public function getObjects(): array
     {
         return $this->objects;

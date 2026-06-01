@@ -161,13 +161,14 @@ class ContainerTest extends TestCase
         $container->get(VariadicConstructor::class);
     }
 
-    public function testItResolvesTypedVariadicAsSingleInstance(): void
+    public function testItSkipsTypedVariadicWithoutEchoingRequiredDependency(): void
     {
         $container = new Container();
 
         $object = $container->get(TypedVariadicConstructor::class);
 
         $this->assertInstanceOf(TypedVariadicConstructor::class, $object);
+        $this->assertSame($container->get(SimpleObject::class), $object->getObject());
         $this->assertSame([], $object->getObjects());
     }
 
