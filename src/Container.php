@@ -273,14 +273,9 @@ class Container implements ContainerInterface
      */
     private function findParameterValue(ReflectionParameter $parameter): mixed
     {
-        // Variadic parameters need hand-weaving
-        if ($parameter->isVariadic()) {
-            return $this->missing;
-        }
-
         $paramType = $parameter->getType();
 
-        // Not considering composite types, such as unions or intersections, for now
+        // Not considering composite types (unions, intersections, or variadic parameters) for now
         if (!$paramType instanceof ReflectionNamedType) {
             return $this->resolveDefaultValue($parameter);
         }
