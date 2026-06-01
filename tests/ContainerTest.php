@@ -155,10 +155,9 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Unknown service');
+        $object = $container->get(VariadicConstructor::class);
 
-        $container->get(VariadicConstructor::class);
+        $this->assertSame([], $object->getInputs());
     }
 
     public function testItSkipsTypedVariadicWithoutEchoingRequiredDependency(): void
