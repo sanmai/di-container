@@ -168,7 +168,7 @@ class ContainerTest extends TestCase
 
         $this->assertInstanceOf(TypedVariadicConstructor::class, $object);
         $this->assertSame($container->get(SimpleObject::class), $object->getObject());
-        $this->assertSame([], $object->getObjects());
+        $this->assertSame([], $object->getVariadicDependency());
     }
 
     public function testItThrowsOnClassesWithCompositeArgumentsWithoutDefault(): void
