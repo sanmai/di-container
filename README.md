@@ -144,8 +144,6 @@ This approach allows you to wire dependencies without explicitly linking an impl
 
 The container omits circular dependency checks for simplicity, an issue that even the most minimal automatic test will immediately reveal.
 
-The container fallbacks to the default value the composite and variadic parameters.
-
 ## Testing
 
 ```bash
