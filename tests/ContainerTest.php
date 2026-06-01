@@ -47,6 +47,7 @@ use PHPUnit\Framework\TestCase;
 use Tests\DIContainer\Fixtures\ComplexDepender;
 use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
+use Tests\DIContainer\Fixtures\CompositeDefaultDependent;
 use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
@@ -59,6 +60,7 @@ use Tests\DIContainer\Fixtures\NameNeederOptional;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
+use Tests\DIContainer\Fixtures\TypedVariadicConstructor;
 use Tests\DIContainer\Fixtures\VariadicConstructor;
 use Closure;
 use SplFileInfo;
@@ -149,24 +151,44 @@ class ContainerTest extends TestCase
         $container->get(ComplexObject::class);
     }
 
-    public function testItThrowsOnClassesWithVariadicArguments(): void
+    public function testItHandlesClassesWithVariadicArguments(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(VariadicConstructor::class);
+
+        $this->assertSame([], $object->getInputs());
+    }
+
+    public function testItSkipsTypedVariadicParameters(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(TypedVariadicConstructor::class);
+
+        $this->assertInstanceOf(TypedVariadicConstructor::class, $object);
+        $this->assertSame($container->get(SimpleObject::class), $object->getObject());
+        $this->assertSame([], $object->getVariadicDependencies());
+    }
+
+    public function testItThrowsOnClassesWithCompositeArgumentsWithoutDefault(): void
     {
         $container = new Container();
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Unknown service');
 
-        $container->get(VariadicConstructor::class);
+        $container->get(ComplexDepender::class);
     }
 
-    public function testItThrowsOnClassesWithCompositeArguments(): void
+    public function testItResolvesCompositeArgumentWithDefault(): void
     {
         $container = new Container();
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Composite types are not supported');
+        $object = $container->get(CompositeDefaultDependent::class);
 
-        $container->get(ComplexDepender::class);
+        $this->assertInstanceOf(CompositeDefaultDependent::class, $object);
+        $this->assertNull($object->getOptionalCompositeDependency());
     }
 
     public static function provideNameNeeders(): iterable
