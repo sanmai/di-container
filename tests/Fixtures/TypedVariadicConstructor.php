@@ -60,7 +60,7 @@ class TypedVariadicConstructor
     }
 
     /** @return array<array-key, SimpleObject> */
-    public function getVariadicDependency(): array
+    public function getVariadicDependencies(): array
     {
         return $this->objects;
     }

@@ -41,7 +41,7 @@ class VariadicConstructor
     /** @var array<array-key, mixed> */
     private readonly array $inputs;
 
-    /** @param mixed $inputs */
+    /** @param mixed ...$inputs */
     public function __construct(...$inputs)
     {
         $this->inputs = $inputs;
