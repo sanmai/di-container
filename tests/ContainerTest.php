@@ -188,7 +188,7 @@ class ContainerTest extends TestCase
         $object = $container->get(CompositeDefaultDependent::class);
 
         $this->assertInstanceOf(CompositeDefaultDependent::class, $object);
-        $this->assertNull($object->getObject());
+        $this->assertNull($object->getOptionalCompositeDependency());
     }
 
     public static function provideNameNeeders(): iterable

@@ -44,7 +44,7 @@ class CompositeDefaultDependent
         private readonly SimpleObject|NameProvider|null $object = null,
     ) {}
 
-    public function getObject(): SimpleObject|NameProvider|null
+    public function getOptionalCompositeDependency(): SimpleObject|NameProvider|null
     {
         return $this->object;
     }
