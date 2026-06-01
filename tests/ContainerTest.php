@@ -159,12 +159,12 @@ class ContainerTest extends TestCase
         $container->get(VariadicConstructor::class);
     }
 
-    public function testItThrowsOnClassesWithCompositeArguments(): void
+    public function testItThrowsOnClassesWithCompositeArgumentsWithoutDefault(): void
     {
         $container = new Container();
 
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Composite types are not supported');
+        $this->expectExceptionMessage('Unknown service');
 
         $container->get(ComplexDepender::class);
     }
