@@ -47,6 +47,7 @@ use PHPUnit\Framework\TestCase;
 use Tests\DIContainer\Fixtures\ComplexDepender;
 use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
+use Tests\DIContainer\Fixtures\CompositeDefaultDependent;
 use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
@@ -167,6 +168,16 @@ class ContainerTest extends TestCase
         $this->expectExceptionMessage('Unknown service');
 
         $container->get(ComplexDepender::class);
+    }
+
+    public function testItResolvesCompositeArgumentWithDefault(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(CompositeDefaultDependent::class);
+
+        $this->assertInstanceOf(CompositeDefaultDependent::class, $object);
+        $this->assertNull($object->getObject());
     }
 
     public static function provideNameNeeders(): iterable
