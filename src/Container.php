@@ -244,15 +244,15 @@ class Container implements ContainerInterface
             ->select($this->notMissing(...))
             ->toList();
 
-        $expectedNumberOfParameters = $constructor->getNumberOfParameters();
+        $requiredNumberOfParameters = $constructor->getNumberOfParameters();
 
-        // Resolve the variadic parameter into an empty collection
+        // Resolve the variadic parameter into an empty collection (can be only one)
         if ($constructor->isVariadic()) {
-            $expectedNumberOfParameters -= 1;
+            $requiredNumberOfParameters -= 1;
         }
 
         // Check if we identified all parameters for the service
-        if (count($resolvedArguments) < $expectedNumberOfParameters) {
+        if (count($resolvedArguments) !== $requiredNumberOfParameters) {
             return null;
         }
 
