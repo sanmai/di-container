@@ -38,6 +38,7 @@ namespace Tests\DIContainer\Fixtures;
 
 class VariadicConstructor
 {
+    /** @var array<array-key, mixed> */
     private readonly array $inputs;
 
     /** @param mixed $inputs */
@@ -46,6 +47,7 @@ class VariadicConstructor
         $this->inputs = $inputs;
     }
 
+    /** @return array<array-key, mixed> */
     public function getInputs(): array
     {
         return $this->inputs;
