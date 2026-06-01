@@ -282,7 +282,7 @@ class Container implements ContainerInterface
 
         // Not considering composite types, such as unions or intersections, for now
         if (!$paramType instanceof ReflectionNamedType) {
-            throw new Exception('Composite types are not supported');
+            return $this->resolveDefaultValue($parameter);
         }
 
         /** @var class-string $paramTypeName */
