@@ -160,7 +160,7 @@ class ContainerTest extends TestCase
         $this->assertSame([], $object->getInputs());
     }
 
-    public function testItSkipsTypedVariadicWithoutEchoingRequiredDependency(): void
+    public function testItSkipsTypedVariadicParameters(): void
     {
         $container = new Container();
 
