@@ -246,7 +246,7 @@ class Container implements ContainerInterface
 
         $requiredNumberOfParameters = $constructor->getNumberOfParameters();
 
-        // Resolve the variadic parameter into an empty collection (can be only one)
+        // Account for the variadic parameter (there can be only one, always optional)
         if ($constructor->isVariadic()) {
             $requiredNumberOfParameters -= 1;
         }
