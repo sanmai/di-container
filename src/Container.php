@@ -244,8 +244,15 @@ class Container implements ContainerInterface
             ->select($this->notMissing(...))
             ->toList();
 
+        $expectedNumberOfParameters = $constructor->getNumberOfParameters();
+
+        // Resolve the variadic parameter into an empty collection
+        if ($constructor->isVariadic()) {
+            $expectedNumberOfParameters -= 1;
+        }
+
         // Check if we identified all parameters for the service
-        if (count($resolvedArguments) !== $constructor->getNumberOfParameters()) {
+        if (count($resolvedArguments) < $expectedNumberOfParameters) {
             return null;
         }
 
@@ -273,7 +280,7 @@ class Container implements ContainerInterface
      */
     private function findParameterValue(ReflectionParameter $parameter): mixed
     {
-        // Variadic parameters need hand-weaving
+        // Variadic parameters imply collections, so we ignore them
         if ($parameter->isVariadic()) {
             return $this->missing;
         }
