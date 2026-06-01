@@ -319,6 +319,12 @@ class Container implements ContainerInterface
         /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
 
+        // Resolve to the live container for PSR-11 container contracts only,
+        // not for unrelated interfaces this container happens to implement
+        if (is_a($paramTypeName, ContainerInterface::class, true)) {
+            return $this;
+        }
+
         // Defer to a default value for built-in types and classes that cannot be reflected
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
             return $this->resolveDefaultValue($parameter);
