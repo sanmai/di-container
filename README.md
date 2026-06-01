@@ -136,15 +136,13 @@ This container prioritizes simplicity, predictability, and architectural purity.
 
 - Predictable autowiring; there are no complex background scans or fragile naming conventions.
 - Lack of surprises; the container will only resolve an interface if it can find **exactly one** registered factory or builder that produces a compatible implementation. It will never guess, ensuring the dependency graph is always clear, just as your day is worry-free.
-- Constructor-only dependency injection; the container intentionally avoids complex features, such as property/method injection or variadic/composite types injection. This approach promotes cleaner, more testable class designs.
+- Constructor-only dependency injection; the container intentionally avoids complex features, such as property/method injection or injection of variadic/composite types beyond default values. This approach promotes cleaner, more testable class designs.
 
 The container resolves interfaces using a straightforward rule: when a dependency is an interface, it looks for exactly one registered factory or a builder that produces a compatible object.
 
 This approach allows you to wire dependencies without explicitly linking an implementation to an interface; the container connects them logically as long as the relationship is unambiguous.
 
 The container omits circular dependency checks for simplicity, an issue that even the most minimal automatic test will immediately reveal.
-
-The container fallbacks to the default value the composite and variadic parameters.
 
 ## Testing
 
