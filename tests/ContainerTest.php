@@ -360,6 +360,16 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(SimpleObject::class, $result->get(SimpleObject::class));
     }
 
+    public function testFactoryParameterAutowiring(): void
+    {
+        $container = new Container([
+            ComplexObject::class => static fn(NameProvider $np, SimpleObject $so)
+                => new ComplexObject($np->getName(), $so),
+        ]);
+
+        $this->assertInstanceOf(ComplexObject::class, $container->get(ComplexObject::class));
+    }
+
     public function testFactoryWithContainerParameter(): void
     {
         $container = new Container([
@@ -369,8 +379,9 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
     }
 
-    public function testFactorySelfType(): void
+    public function testFactoryFallsBackToContainerOnSelfType(): void
     {
+        // When factory has 'self' type, it can't be resolved, so falls back to passing container
         $container = new ExtendedContainer();
         $result = $container->withSelfFactory();
 

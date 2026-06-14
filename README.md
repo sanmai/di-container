@@ -13,6 +13,7 @@ composer require sanmai/di-container
 ## Features
 
 - Automatically resolves class dependencies through reflection
+- Factory parameters are autowired just like constructor parameters
 - Objects are created once and reused
 - Resolve interfaces to concrete implementations
 
@@ -26,14 +27,13 @@ $container = new Container();
 // Automatic resolution - no configuration needed
 $service = $container->get(YourService::class);
 
-// Use builder objects for complex construction, or construct the dependencies directly - your choice
+// Factory parameters are autowired - no need to call $container->get()
 $container = new Container([
-    ComplexObject::class => fn(Container $container) => new ComplexObject(
-        $container->get(LoggerInterface::class),
-        $container->get(AnotherProvider::class)->getValue()
+    ComplexObject::class => fn(LoggerInterface $logger, AnotherProvider $provider) => new ComplexObject(
+        $logger,
+        $provider->getValue()
     ),
-    DatabaseInterface::class => fn(Container $container) =>
-        $container->get(DatabaseBuilder::class)->build(),
+    DatabaseInterface::class => DatabaseBuilder::class,
 ]);
 
 // Set additional dependencies on the fly

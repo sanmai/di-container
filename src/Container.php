@@ -38,8 +38,10 @@ declare(strict_types=1);
 
 namespace DIContainer;
 
+use Closure;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
+use ReflectionFunction;
 use ReflectionNamedType;
 use ReflectionParameter;
 
@@ -201,7 +203,7 @@ class Container implements ContainerInterface
 
         if (array_key_exists($id, $this->factories)) {
             /** @var T $value */
-            $value = $this->factories[$id]($this);
+            $value = $this->invokeFactory($this->factories[$id]);
 
             return $this->setValueOrThrow($id, $value);
         }
@@ -239,10 +241,7 @@ class Container implements ContainerInterface
             return $reflectionClass->newInstance();
         }
 
-        $resolvedArguments = take($constructor->getParameters())
-            ->cast($this->findParameterValue(...))
-            ->select($this->notMissing(...))
-            ->toList();
+        $resolvedArguments = $this->resolveArguments($constructor->getParameters());
 
         $requiredNumberOfParameters = $constructor->getNumberOfParameters();
 
@@ -257,6 +256,38 @@ class Container implements ContainerInterface
         }
 
         return $reflectionClass->newInstanceArgs($resolvedArguments);
+    }
+
+    /**
+     * Invoke a factory callable with autowired parameters.
+     * @param callable(mixed...):object $factory
+     */
+    private function invokeFactory(callable $factory): object
+    {
+        $reflection = new ReflectionFunction(Closure::fromCallable($factory));
+        $params = $reflection->getParameters();
+
+        $args = $this->resolveArguments($params);
+
+        // Fall back to passing container for backward compatibility
+        return match (count($params)) {
+            count($args) => $factory(...$args),
+            default => $factory($this),
+        };
+    }
+
+    /**
+     * Resolve each parameter to an argument, dropping unresolved.
+     *
+     * @param iterable<ReflectionParameter> $parameters
+     * @return list<mixed>
+     */
+    private function resolveArguments(iterable $parameters): array
+    {
+        return take($parameters)
+            ->cast($this->findParameterValue(...))
+            ->select($this->notMissing(...))
+            ->toList();
     }
 
     private function notMissing(mixed $value): bool
@@ -294,6 +325,12 @@ class Container implements ContainerInterface
 
         /** @var class-string $paramTypeName */
         $paramTypeName = $paramType->getName();
+
+        // Resolve to the live container for PSR-11 container contracts only,
+        // not for unrelated interfaces this container happens to implement
+        if (is_a($paramTypeName, ContainerInterface::class, true)) {
+            return $this;
+        }
 
         // Defer to a default value for built-in types and classes that cannot be reflected
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
