@@ -463,6 +463,8 @@ class ContainerTest extends TestCase
 
         $this->assertSame($rebound, $container->get(SimpleObject::class));
         $this->assertNotSame($injected, $container->get(SimpleObject::class));
+
+        $this->assertSame($rebound, $container->get(DependentObject::class)->getSimpleObject());
     }
 
     public function testBindOverridesBuilder(): void

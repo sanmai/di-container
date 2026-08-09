@@ -121,7 +121,7 @@ class Container implements ContainerInterface
     public function bind(string $id, callable|string $value): void
     {
         // Registered dependencies override everything else at bind time
-        unset($this->values[$id], $this->factories[$id], $this->builders[$id]);
+        unset($this->values[$id], $this->factories[$id], $this->builders[$id], $this->prebuilt[$id]);
 
         // A value can be a callable and also implement our `Builder` interface:
         // we must treat such cases as factories, not builders, to ensure
@@ -189,10 +189,16 @@ class Container implements ContainerInterface
      */
     public function get(string $id)
     {
+        // All kinds of already built instances come first
         if (array_key_exists($id, $this->values)) {
             return $this->values[$id];
         }
 
+        if (array_key_exists($id, $this->prebuilt)) {
+            return $this->prebuilt[$id];
+        }
+
+        // Builders and factories assume extra work, so they follow next
         if (array_key_exists($id, $this->builders)) {
             /** @var Builder<T> $builder */
             $builder = $this->get($this->builders[$id]);
@@ -205,11 +211,6 @@ class Container implements ContainerInterface
             $value = $this->factories[$id]($this);
 
             return $this->setValueOrThrow($id, $value);
-        }
-
-        // Consider pre-built instances last to give way to factories and builders
-        if (array_key_exists($id, $this->prebuilt)) {
-            return $this->prebuilt[$id];
         }
 
         $value = $this->createService($id);
