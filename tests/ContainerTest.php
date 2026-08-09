@@ -254,6 +254,24 @@ class ContainerTest extends TestCase
         $this->assertSame('hello', $nameNeeder->getName());
     }
 
+    public function testItUnderstandsImplementationClassNames(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => NameProvider::class,
+        ]);
+
+        $this->assertTrue($container->has(NamedObjectInterface::class));
+
+        $object = $container->get(NamedObjectInterface::class);
+
+        $this->assertInstanceOf(NameProvider::class, $object);
+        $this->assertSame('hello', $object->getName());
+
+        $this->assertSame($object, $container->get(NameProvider::class));
+
+        $this->assertSame('hello', $container->get(NameNeeder::class)->getName());
+    }
+
     public function testItHas(): void
     {
         $container = new Container([
