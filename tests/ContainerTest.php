@@ -257,11 +257,8 @@ class ContainerTest extends TestCase
     public function testItUnderstandsImplementationClassNames(): void
     {
         $container = new Container([
-            SimpleObject::class => SimpleObject::class,
             NamedObjectInterface::class => NameProvider::class,
         ]);
-
-        $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
 
         $this->assertTrue($container->has(NamedObjectInterface::class));
 
@@ -273,6 +270,10 @@ class ContainerTest extends TestCase
         $this->assertSame($object, $container->get(NameProvider::class));
 
         $this->assertSame('hello', $container->get(NameNeeder::class)->getName());
+
+        $container->set(SimpleObject::class, SimpleObject::class);
+
+        $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
     }
 
     public function testItThrowsOnSelfReferencingInterfaces(): void
