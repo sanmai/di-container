@@ -237,6 +237,18 @@ class ContainerTest extends TestCase
         $this->assertSame('hello', $nameNeeder->getName());
     }
 
+    public function testBindReplacesPriorBuilder(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => ComplexObjectBuilder::class,
+        ]);
+
+        $container->set(NamedObjectInterface::class, static fn() => new NameProvider());
+
+        // The builder must leave no trace behind
+        $this->assertInstanceOf(NameProvider::class, $container->get(NamedObjectInterface::class));
+    }
+
     public function testItHas(): void
     {
         $container = new Container([
