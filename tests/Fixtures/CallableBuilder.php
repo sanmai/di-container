@@ -36,20 +36,25 @@
 
 namespace Tests\DIContainer\Fixtures;
 
-class VariadicConstructor
-{
-    /** @var array<array-key, mixed> */
-    private readonly array $inputs;
+use DIContainer\Builder;
+use LogicException;
 
-    /** @param mixed ...$inputs */
-    public function __construct(...$inputs)
+/**
+ * @implements Builder<CallableBuilder>
+ */
+readonly class CallableBuilder implements Builder
+{
+    public function __construct(
+        private string $name = "unknown",
+    ) {}
+
+    public function build(): CallableBuilder
     {
-        $this->inputs = $inputs;
+        throw new LogicException();
     }
 
-    /** @return array<array-key, mixed> */
-    public function getInputs(): array
+    public function __invoke(): ComplexObject
     {
-        return $this->inputs;
+        return new ComplexObject($this->name, new SimpleObject());
     }
 }

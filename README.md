@@ -33,18 +33,22 @@ $container = new Container([
         $logger,
         $provider->getValue()
     ),
-    DatabaseInterface::class => DatabaseBuilder::class,
+    DatabaseInterface::class => fn(Container $container) =>
+        $container->get(DatabaseBuilder::class)->build(),
+    // Concrete class names also work when suggesting a preferred implementation
+    CommonAbstractClass::class => ConcreteImplementation::class,
 ]);
 
 // Set additional dependencies on the fly
 $container->set(LoggerInterface::class, fn() => new FileLogger('debug.log'));
+$container->set(SomeInterface::class, PreferredImplementation::class);
 
 $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects database
 ```
 
 The order in which you define your services is not important, as dependencies are only resolved when they are requested.
 
-That said, injected pre-built instance instances override prior dependencies for that ID, but a later `set()` or `bind()` overrides again.
+That said, injected pre-built instances override prior dependencies for that ID, but a later `set()` or `bind()` overrides again.
 
 ## Builder Objects
 
@@ -92,7 +96,7 @@ $container = new Container([
 ]);
 ```
 
-For setting dependencies on the fly, there's a handy `set()` method that accepts both callables and builders.
+For setting dependencies on the fly, there's a handy `set()` method that accepts callables, builder class names, and implementation class names. Callables have a priority over builders.
 
 ## Non-Class Service IDs
 
@@ -119,7 +123,7 @@ $container->bind('app.session', SessionBuilder::class);
 $repository = $container->get('app.repository');
 ```
 
-The `bind()` method and `$bindings` parameter accept both callables and builder class names, just like `set()`, but without class-string type constraints on the service ID.
+The `bind()` method and `$bindings` parameter accept callables, builder class names, and implementation class names, just like `set()`, but without class-string type constraints on the service ID.
 
 ## Pre-Built Instances
 
@@ -136,7 +140,7 @@ This container prioritizes simplicity, predictability, and architectural purity.
 
 - Predictable autowiring; there are no complex background scans or fragile naming conventions.
 - Lack of surprises; the container will only resolve an interface if it can find **exactly one** registered factory or builder that produces a compatible implementation. It will never guess, ensuring the dependency graph is always clear, just as your day is worry-free.
-- Constructor-only dependency injection; the container intentionally avoids complex features, such as property/method injection or support for variadic/composite types in constructors. This approach promotes cleaner, more testable class designs.
+- Constructor-only dependency injection; the container intentionally avoids complex features, such as property/method injection or injection of variadic/composite types beyond default values. This approach promotes cleaner, more testable class designs.
 
 The container resolves interfaces using a straightforward rule: when a dependency is an interface, it looks for exactly one registered factory or a builder that produces a compatible object.
 

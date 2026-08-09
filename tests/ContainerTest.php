@@ -44,9 +44,11 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Tests\DIContainer\Fixtures\CallableBuilder;
 use Tests\DIContainer\Fixtures\ComplexDepender;
 use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
+use Tests\DIContainer\Fixtures\CompositeDefaultDependent;
 use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
@@ -59,6 +61,7 @@ use Tests\DIContainer\Fixtures\NameNeederOptional;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
+use Tests\DIContainer\Fixtures\TypedVariadicConstructor;
 use Tests\DIContainer\Fixtures\VariadicConstructor;
 use Closure;
 use SplFileInfo;
@@ -149,24 +152,44 @@ class ContainerTest extends TestCase
         $container->get(ComplexObject::class);
     }
 
-    public function testItThrowsOnClassesWithVariadicArguments(): void
+    public function testItHandlesClassesWithVariadicArguments(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(VariadicConstructor::class);
+
+        $this->assertSame([], $object->getInputs());
+    }
+
+    public function testItSkipsTypedVariadicParameters(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(TypedVariadicConstructor::class);
+
+        $this->assertInstanceOf(TypedVariadicConstructor::class, $object);
+        $this->assertSame($container->get(SimpleObject::class), $object->getObject());
+        $this->assertSame([], $object->getVariadicDependencies());
+    }
+
+    public function testItThrowsOnClassesWithCompositeArgumentsWithoutDefault(): void
     {
         $container = new Container();
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Unknown service');
 
-        $container->get(VariadicConstructor::class);
+        $container->get(ComplexDepender::class);
     }
 
-    public function testItThrowsOnClassesWithCompositeArguments(): void
+    public function testItResolvesCompositeArgumentWithDefault(): void
     {
         $container = new Container();
 
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Composite types are not supported');
+        $object = $container->get(CompositeDefaultDependent::class);
 
-        $container->get(ComplexDepender::class);
+        $this->assertInstanceOf(CompositeDefaultDependent::class, $object);
+        $this->assertNull($object->getOptionalCompositeDependency());
     }
 
     public static function provideNameNeeders(): iterable
@@ -198,6 +221,20 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(DependentObject::class, $object);
     }
 
+    public function testItHandlesCallableBuilders(): void
+    {
+        $builder = new CallableBuilder("example");
+
+        $container = new Container([
+            ComplexObject::class => $builder,
+        ]);
+
+        $object = $container->get(ComplexObject::class);
+
+        $this->assertInstanceOf(ComplexObject::class, $object);
+        $this->assertSame("example", $object->getName());
+    }
+
     public function testItUnderstandsBuilders(): void
     {
         $container = new Container([
@@ -210,9 +247,45 @@ class ContainerTest extends TestCase
 
         $this->assertSame('hello', $object->getName());
 
+        $this->assertFalse($container->has(NameNeeder::class));
         $nameNeeder = $container->get(NameNeeder::class);
+        $this->assertTrue($container->has(NameNeeder::class));
 
         $this->assertSame('hello', $nameNeeder->getName());
+    }
+
+    public function testItUnderstandsImplementationClassNames(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => NameProvider::class,
+        ]);
+
+        $this->assertTrue($container->has(NamedObjectInterface::class));
+
+        $object = $container->get(NamedObjectInterface::class);
+
+        $this->assertInstanceOf(NameProvider::class, $object);
+        $this->assertSame('hello', $object->getName());
+
+        $this->assertSame($object, $container->get(NameProvider::class));
+
+        $this->assertSame('hello', $container->get(NameNeeder::class)->getName());
+
+        $container->set(SimpleObject::class, SimpleObject::class);
+
+        $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
+    }
+
+    public function testItThrowsOnSelfReferencingInterfaces(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => NamedObjectInterface::class,
+        ]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(NamedObjectInterface::class);
     }
 
     public function testItHas(): void
@@ -435,6 +508,24 @@ class ContainerTest extends TestCase
 
         $this->assertSame($rebound, $container->get(SimpleObject::class));
         $this->assertNotSame($injected, $container->get(SimpleObject::class));
+
+        $this->assertSame($rebound, $container->get(DependentObject::class)->getSimpleObject());
+    }
+
+    public function testBindOverridesBuilder(): void
+    {
+        $container = new Container();
+        $container->set(NamedObjectInterface::class, ComplexObjectBuilder::class);
+        $built = $container->get(NamedObjectInterface::class);
+
+        $bound = new NameProvider();
+        $container->set(NamedObjectInterface::class, static fn() => $bound);
+
+        $this->assertNotSame($built, $container->get(NamedObjectInterface::class));
+        $this->assertSame($bound, $container->get(NamedObjectInterface::class));
+
+        $this->assertInstanceOf(NameProvider::class, $container->get(NamedObjectInterface::class));
+        $this->assertNotInstanceOf(ComplexObject::class, $container->get(NamedObjectInterface::class));
     }
 
     public function testInjectSingletonBehavior(): void
@@ -444,6 +535,7 @@ class ContainerTest extends TestCase
 
         $container->inject(SimpleObject::class, $object);
 
+        $this->assertTrue($container->has(SimpleObject::class));
         $this->assertSame($object, $container->get(SimpleObject::class));
         $this->assertSame($object, $container->get(SimpleObject::class));
     }

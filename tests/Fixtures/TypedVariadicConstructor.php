@@ -34,22 +34,34 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace Tests\DIContainer\Fixtures;
 
-class VariadicConstructor
+/**
+ * A required dependency followed by a typed variadic of the same type: the
+ * container must resolve the required one and leave the variadic empty.
+ */
+class TypedVariadicConstructor
 {
-    /** @var array<array-key, mixed> */
-    private readonly array $inputs;
+    /** @var array<array-key, SimpleObject> */
+    private readonly array $objects;
 
-    /** @param mixed ...$inputs */
-    public function __construct(...$inputs)
-    {
-        $this->inputs = $inputs;
+    public function __construct(
+        private readonly SimpleObject $object,
+        SimpleObject ...$objects,
+    ) {
+        $this->objects = $objects;
     }
 
-    /** @return array<array-key, mixed> */
-    public function getInputs(): array
+    public function getObject(): SimpleObject
     {
-        return $this->inputs;
+        return $this->object;
+    }
+
+    /** @return array<array-key, SimpleObject> */
+    public function getVariadicDependencies(): array
+    {
+        return $this->objects;
     }
 }

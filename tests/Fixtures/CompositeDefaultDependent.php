@@ -34,22 +34,18 @@
  *
  */
 
+declare(strict_types=1);
+
 namespace Tests\DIContainer\Fixtures;
 
-class VariadicConstructor
+class CompositeDefaultDependent
 {
-    /** @var array<array-key, mixed> */
-    private readonly array $inputs;
+    public function __construct(
+        private readonly SimpleObject|NameProvider|null $object = null,
+    ) {}
 
-    /** @param mixed ...$inputs */
-    public function __construct(...$inputs)
+    public function getOptionalCompositeDependency(): SimpleObject|NameProvider|null
     {
-        $this->inputs = $inputs;
-    }
-
-    /** @return array<array-key, mixed> */
-    public function getInputs(): array
-    {
-        return $this->inputs;
+        return $this->object;
     }
 }
