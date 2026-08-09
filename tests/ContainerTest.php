@@ -245,8 +245,8 @@ class ContainerTest extends TestCase
 
         $container->set(NamedObjectInterface::class, static fn() => new NameProvider());
 
-        // The builder must leave no trace behind
         $this->assertInstanceOf(NameProvider::class, $container->get(NamedObjectInterface::class));
+        $this->assertNotInstanceOf(ComplexObject::class, $container->get(NamedObjectInterface::class));
     }
 
     public function testItHas(): void
