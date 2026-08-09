@@ -257,8 +257,11 @@ class ContainerTest extends TestCase
     public function testItUnderstandsImplementationClassNames(): void
     {
         $container = new Container([
+            SimpleObject::class => SimpleObject::class,
             NamedObjectInterface::class => NameProvider::class,
         ]);
+
+        $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
 
         $this->assertTrue($container->has(NamedObjectInterface::class));
 

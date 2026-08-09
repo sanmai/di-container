@@ -209,7 +209,10 @@ class Container implements ContainerInterface
         }
 
         // Resolve concrete implementations using common rules
-        if (array_key_exists($id, $this->implementations) && $this->implementations[$id] !== $id) {
+        if (
+            array_key_exists($id, $this->implementations)
+            && $this->implementations[$id] !== $id
+        ) {
             return $this->setValueOrThrow($id, $this->get($this->implementations[$id]));
         }
 
