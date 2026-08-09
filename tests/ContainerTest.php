@@ -237,7 +237,6 @@ class ContainerTest extends TestCase
         $this->assertSame('hello', $nameNeeder->getName());
     }
 
-
     public function testItHas(): void
     {
         $container = new Container([
