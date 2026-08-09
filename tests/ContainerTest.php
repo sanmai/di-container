@@ -44,6 +44,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Tests\DIContainer\Fixtures\CallableBuilder;
 use Tests\DIContainer\Fixtures\ComplexDepender;
 use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
@@ -218,6 +219,20 @@ class ContainerTest extends TestCase
         $object = $container->get(DependentObject::class);
 
         $this->assertInstanceOf(DependentObject::class, $object);
+    }
+
+    public function testItHandlesCallableBuilders(): void
+    {
+        $builder = new CallableBuilder("example");
+
+        $container = new Container([
+            ComplexObject::class => $builder,
+        ]);
+
+        $object = $container->get(ComplexObject::class);
+
+        $this->assertInstanceOf(ComplexObject::class, $object);
+        $this->assertSame("example", $object->getName());
     }
 
     public function testItUnderstandsBuilders(): void
