@@ -272,6 +272,18 @@ class ContainerTest extends TestCase
         $this->assertSame('hello', $container->get(NameNeeder::class)->getName());
     }
 
+    public function testItThrowsOnSelfReferencingInterfaces(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => NamedObjectInterface::class,
+        ]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(NamedObjectInterface::class);
+    }
+
     public function testItHas(): void
     {
         $container = new Container([
