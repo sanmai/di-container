@@ -448,6 +448,22 @@ class ContainerTest extends TestCase
         $this->assertNotSame($injected, $container->get(SimpleObject::class));
     }
 
+    public function testBindOverridesBuilder(): void
+    {
+        $container = new Container();
+        $container->set(NamedObjectInterface::class, ComplexObjectBuilder::class);
+        $built = $container->get(NamedObjectInterface::class);
+
+        $bound = new NameProvider();
+        $container->set(NamedObjectInterface::class, static fn() => $bound);
+
+        $this->assertNotSame($built, $container->get(NamedObjectInterface::class));
+        $this->assertSame($bound, $container->get(NamedObjectInterface::class));
+
+        $this->assertInstanceOf(NameProvider::class, $container->get(NamedObjectInterface::class));
+        $this->assertNotInstanceOf(ComplexObject::class, $container->get(NamedObjectInterface::class));
+    }
+
     public function testInjectSingletonBehavior(): void
     {
         $container = new Container();

@@ -120,7 +120,8 @@ class Container implements ContainerInterface
      */
     public function bind(string $id, callable|string $value): void
     {
-        unset($this->values[$id]);
+        // Registered dependencies override everything else at bind time
+        unset($this->values[$id], $this->factories[$id], $this->builders[$id]);
 
         // A value can be a callable and also implement our `Builder` interface:
         // we must treat such cases as factories, not builders, to ensure
