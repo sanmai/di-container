@@ -247,7 +247,9 @@ class ContainerTest extends TestCase
 
         $this->assertSame('hello', $object->getName());
 
+        $this->assertFalse($container->has(NameNeeder::class));
         $nameNeeder = $container->get(NameNeeder::class);
+        $this->assertTrue($container->has(NameNeeder::class));
 
         $this->assertSame('hello', $nameNeeder->getName());
     }
