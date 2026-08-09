@@ -346,6 +346,10 @@ class Container implements ContainerInterface
             return true;
         }
 
+        if (array_key_exists($id, $this->prebuilt)) {
+            return true;
+        }
+
         if (array_key_exists($id, $this->factories)) {
             return true;
         }

@@ -490,6 +490,7 @@ class ContainerTest extends TestCase
 
         $container->inject(SimpleObject::class, $object);
 
+        $this->assertTrue($container->has(SimpleObject::class));
         $this->assertSame($object, $container->get(SimpleObject::class));
         $this->assertSame($object, $container->get(SimpleObject::class));
     }
