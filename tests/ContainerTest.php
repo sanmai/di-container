@@ -237,17 +237,6 @@ class ContainerTest extends TestCase
         $this->assertSame('hello', $nameNeeder->getName());
     }
 
-    public function testBindReplacesPriorBuilder(): void
-    {
-        $container = new Container([
-            NamedObjectInterface::class => ComplexObjectBuilder::class,
-        ]);
-
-        $container->set(NamedObjectInterface::class, static fn() => new NameProvider());
-
-        $this->assertInstanceOf(NameProvider::class, $container->get(NamedObjectInterface::class));
-        $this->assertNotInstanceOf(ComplexObject::class, $container->get(NamedObjectInterface::class));
-    }
 
     public function testItHas(): void
     {
@@ -458,6 +447,22 @@ class ContainerTest extends TestCase
 
         $this->assertSame($rebound, $container->get(SimpleObject::class));
         $this->assertNotSame($injected, $container->get(SimpleObject::class));
+    }
+
+    public function testBindOverridesBuilder(): void
+    {
+        $container = new Container();
+        $container->set(NamedObjectInterface::class, ComplexObjectBuilder::class);
+        $built = $container->get(SimpleObject::class);
+
+        $bound = new NameProvider();
+        $container->set(NamedObjectInterface::class, static fn() => $bound);
+
+        $this->assertInstanceOf(NameProvider::class, $container->get(NamedObjectInterface::class));
+        $this->assertNotInstanceOf(ComplexObject::class, $container->get(NamedObjectInterface::class));
+
+        $this->assertNotSame($built, $container->get(NamedObjectInterface::class));
+        $this->assertSame($bound, $container->get(NamedObjectInterface::class));
     }
 
     public function testInjectSingletonBehavior(): void
