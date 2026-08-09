@@ -254,6 +254,40 @@ class ContainerTest extends TestCase
         $this->assertSame('hello', $nameNeeder->getName());
     }
 
+    public function testItUnderstandsImplementationClassNames(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => NameProvider::class,
+        ]);
+
+        $this->assertTrue($container->has(NamedObjectInterface::class));
+
+        $object = $container->get(NamedObjectInterface::class);
+
+        $this->assertInstanceOf(NameProvider::class, $object);
+        $this->assertSame('hello', $object->getName());
+
+        $this->assertSame($object, $container->get(NameProvider::class));
+
+        $this->assertSame('hello', $container->get(NameNeeder::class)->getName());
+
+        $container->set(SimpleObject::class, SimpleObject::class);
+
+        $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
+    }
+
+    public function testItThrowsOnSelfReferencingInterfaces(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => NamedObjectInterface::class,
+        ]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(NamedObjectInterface::class);
+    }
+
     public function testItHas(): void
     {
         $container = new Container([

@@ -34,17 +34,20 @@ $container = new Container([
     ),
     DatabaseInterface::class => fn(Container $container) =>
         $container->get(DatabaseBuilder::class)->build(),
+    // Concrete class names also work when suggesting a preferred implementation
+    CommonAbstractClass::class => ConcreteImplementation::class,
 ]);
 
 // Set additional dependencies on the fly
 $container->set(LoggerInterface::class, fn() => new FileLogger('debug.log'));
+$container->set(SomeInterface::class, PreferredImplementation::class);
 
 $service = $container->get(ServiceNeedingDatabase::class); // Auto-injects database
 ```
 
 The order in which you define your services is not important, as dependencies are only resolved when they are requested.
 
-That said, injected pre-built instance instances override prior dependencies for that ID, but a later `set()` or `bind()` overrides again.
+That said, injected pre-built instances override prior dependencies for that ID, but a later `set()` or `bind()` overrides again.
 
 ## Builder Objects
 
@@ -92,7 +95,7 @@ $container = new Container([
 ]);
 ```
 
-For setting dependencies on the fly, there's a handy `set()` method that accepts both callables and builders.
+For setting dependencies on the fly, there's a handy `set()` method that accepts callables, builder class names, and implementation class names. Callables have a priority over builders.
 
 ## Non-Class Service IDs
 
@@ -119,7 +122,7 @@ $container->bind('app.session', SessionBuilder::class);
 $repository = $container->get('app.repository');
 ```
 
-The `bind()` method and `$bindings` parameter accept both callables and builder class names, just like `set()`, but without class-string type constraints on the service ID.
+The `bind()` method and `$bindings` parameter accept callables, builder class names, and implementation class names, just like `set()`, but without class-string type constraints on the service ID.
 
 ## Pre-Built Instances
 

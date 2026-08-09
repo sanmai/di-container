@@ -77,12 +77,17 @@ class Container implements ContainerInterface
      */
     private array $builders = [];
 
+    /**
+     * @var array<class-string<object>|non-empty-string, class-string<object>>
+     */
+    private array $implementations = [];
+
     /** Placeholder marking an unresolved parameter */
     private readonly object $missing;
 
     /**
-     * @param iterable<class-string<object>, callable|class-string<Builder<object>>> $values
-     * @param iterable<non-empty-string, callable|class-string<Builder<object>>> $bindings
+     * @param iterable<class-string<object>, callable|class-string<Builder<object>>|class-string<object>> $values
+     * @param iterable<non-empty-string, callable|class-string<Builder<object>>|class-string<object>> $bindings For non-class service IDs
      */
     public function __construct(iterable $values = [], iterable $bindings = [])
     {
@@ -101,11 +106,11 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Register a factory or builder for a class-based service ID.
+     * Register a factory, a builder, or an implementation class for a class-based service ID.
      *
      * @template T of object
      * @param class-string<T> $id
-     * @param class-string<Builder<T>>|callable(static): T $value
+     * @param class-string<T>|class-string<Builder<T>>|callable(static): T $value
      */
     public function set(string $id, callable|string $value): void
     {
@@ -113,15 +118,15 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Register a factory or builder for a non-class service ID (e.g., 'app.locator').
+     * Register a factory, a builder, or an implementation class for a non-class service ID (e.g., 'app.locator').
      *
      * @param non-empty-string $id
-     * @param class-string<Builder<object>>|callable(static): object $value
+     * @param class-string<object>|class-string<Builder<object>>|callable(static): object $value
      */
     public function bind(string $id, callable|string $value): void
     {
         // Registered dependencies override everything else at bind time
-        unset($this->values[$id], $this->factories[$id], $this->builders[$id], $this->prebuilt[$id]);
+        unset($this->values[$id], $this->factories[$id], $this->builders[$id], $this->implementations[$id], $this->prebuilt[$id]);
 
         // A value can be a callable and also implement our `Builder` interface:
         // we must treat such cases as factories, not builders, to ensure
@@ -131,7 +136,12 @@ class Container implements ContainerInterface
             return;
         }
 
-        $this->builders[$id] = $value;
+        if (is_a($value, Builder::class, true)) {
+            $this->builders[$id] = $value;
+            return;
+        }
+
+        $this->implementations[$id] = $value;
     }
 
     /**
@@ -144,7 +154,7 @@ class Container implements ContainerInterface
     public function inject(string $id, object $value): void
     {
         // Injected pre-built dependencies override everything else at the time of injection
-        unset($this->values[$id], $this->factories[$id], $this->builders[$id]);
+        unset($this->values[$id], $this->factories[$id], $this->builders[$id], $this->implementations[$id]);
 
         self::assertType($id, $value);
 
@@ -196,6 +206,14 @@ class Container implements ContainerInterface
 
         if (array_key_exists($id, $this->prebuilt)) {
             return $this->prebuilt[$id];
+        }
+
+        // Resolve concrete implementations using common rules
+        if (
+            array_key_exists($id, $this->implementations)
+            && $this->implementations[$id] !== $id
+        ) {
+            return $this->setValueOrThrow($id, $this->get($this->implementations[$id]));
         }
 
         // Builders and factories assume extra work, so they follow next
@@ -324,7 +342,7 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Retrieves the class or interface names of all registered factories/builders that can produce instances of the given type.
+     * Retrieves the class or interface names of all registered factories/builders/etc that can produce instances of the given type.
      * This includes direct implementations, subclasses, or the type itself.
      *
      * @template T of object
@@ -334,7 +352,7 @@ class Container implements ContainerInterface
     private function providersForType(string $type): array
     {
         /** @var list<class-string<object>> */
-        return take($this->factories, $this->builders, $this->prebuilt)
+        return take($this->factories, $this->builders, $this->implementations, $this->prebuilt)
             ->keys()
             ->filter(static fn(string $id) => is_a($id, $type, true))
             ->toList();
@@ -343,6 +361,10 @@ class Container implements ContainerInterface
     public function has(string $id): bool
     {
         if (array_key_exists($id, $this->values)) {
+            return true;
+        }
+
+        if (array_key_exists($id, $this->implementations)) {
             return true;
         }
 
