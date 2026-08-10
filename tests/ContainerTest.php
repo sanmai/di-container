@@ -369,13 +369,17 @@ class ContainerTest extends TestCase
 
     public function testItAllowsOverridingContainerInterface(): void
     {
-        $custom = new Container();
+        $custom = $this->createStub(ContainerInterface::class);
 
         $container = new Container([
             ContainerInterface::class => static fn() => $custom,
         ]);
 
         $this->assertSame($custom, $container->get(ContainerInterface::class));
+
+        $clone = clone $container;
+
+        $this->assertSame($custom, $clone->get(ContainerInterface::class));
     }
 
     public function testItContainerBindingsIndependent(): void
