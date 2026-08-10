@@ -134,6 +134,26 @@ $logger = new FileLogger('app.log');
 $container->inject(LoggerInterface::class, $logger);
 ```
 
+## Removing Services
+
+Use `unbind()` to forget a service together with any instances.
+
+```php
+$container->unbind(LoggerInterface::class);
+
+$container->has(LoggerInterface::class); // false
+```
+
+## Introspection
+
+To inspect the registered services, iterate over the container. It exposes everything registered, and the order is unspecified.
+
+```php
+foreach ($container as $serviceId => $registration) {
+    // ...
+}
+```
+
 ## Design Philosophy
 
 This container prioritizes simplicity, predictability, and architectural purity. It achieves this through:
