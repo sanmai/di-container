@@ -51,7 +51,8 @@ use PhpBench\Attributes\Warmup;
 use ReflectionClass;
 
 /**
- * Update benchmarks/README.md when adding a subject.
+ * Every subject here needs a row in benchmarks/README.md: the benchmark workflow
+ * appends that file to a pull request comment next to these results.
  */
 class ContainerBench
 {
