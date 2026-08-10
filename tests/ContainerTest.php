@@ -465,9 +465,11 @@ class ContainerTest extends TestCase
 
     public function testFailedInjectKeepsPriorRegistration(): void
     {
-        $container = new Container();
         $bound = new SimpleObject();
-        $container->bind(SimpleObject::class, static fn() => $bound);
+
+        $container = new Container([
+            SimpleObject::class => static fn() => $bound,
+        ]);
 
         $this->assertSame($bound, $container->get(SimpleObject::class));
 
