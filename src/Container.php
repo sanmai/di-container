@@ -38,10 +38,12 @@ declare(strict_types=1);
 
 namespace DIContainer;
 
+use IteratorAggregate;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
+use Traversable;
 
 use function array_key_exists;
 use function count;
@@ -55,7 +57,10 @@ use function str_contains;
 use function class_exists;
 use function interface_exists;
 
-class Container implements ContainerInterface
+/**
+ * @implements IteratorAggregate<class-string<object>|non-empty-string, callable|class-string<object>|object>
+ */
+class Container implements ContainerInterface, IteratorAggregate
 {
     /**
      * @var array<class-string<object>|non-empty-string, object>
@@ -126,7 +131,7 @@ class Container implements ContainerInterface
     public function bind(string $id, callable|string $value): void
     {
         // Registered dependencies override everything else at bind time
-        unset($this->values[$id], $this->factories[$id], $this->builders[$id], $this->implementations[$id], $this->prebuilt[$id]);
+        $this->unbind($id);
 
         // A value can be a callable and also implement our `Builder` interface:
         // we must treat such cases as factories, not builders, to ensure
@@ -145,6 +150,14 @@ class Container implements ContainerInterface
     }
 
     /**
+     * @param class-string<object>|non-empty-string $id
+     */
+    public function unbind(string $id): void
+    {
+        unset($this->values[$id], $this->factories[$id], $this->builders[$id], $this->implementations[$id], $this->prebuilt[$id]);
+    }
+
+    /**
      * Inject a pre-built object instance directly into the container.
      *
      * @template T of object
@@ -153,10 +166,10 @@ class Container implements ContainerInterface
      */
     public function inject(string $id, object $value): void
     {
-        // Injected pre-built dependencies override everything else at the time of injection
-        unset($this->values[$id], $this->factories[$id], $this->builders[$id], $this->implementations[$id]);
-
         self::assertType($id, $value);
+
+        // Injected pre-built dependencies override everything else at the time of injection
+        $this->unbind($id);
 
         $this->prebuilt[$id] = $value;
     }
@@ -382,5 +395,13 @@ class Container implements ContainerInterface
 
         // Very pessimistic; could probably try to create it.
         return false;
+    }
+
+    public function getIterator(): Traversable
+    {
+        yield from $this->factories;
+        yield from $this->builders;
+        yield from $this->implementations;
+        yield from $this->prebuilt;
     }
 }

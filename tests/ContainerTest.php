@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace Tests\DIContainer;
 
+use DIContainer\Builder;
 use DIContainer\Container;
 use DIContainer\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -65,6 +66,11 @@ use Tests\DIContainer\Fixtures\TypedVariadicConstructor;
 use Tests\DIContainer\Fixtures\VariadicConstructor;
 use Closure;
 use SplFileInfo;
+
+use function is_a;
+use function is_callable;
+use function is_string;
+use function iterator_to_array;
 
 #[CoversClass(Container::class)]
 class ContainerTest extends TestCase
@@ -571,5 +577,200 @@ class ContainerTest extends TestCase
 
         $this->assertSame(42, $object->getId());
         $this->assertSame($injected, $object->getNamed());
+    }
+
+    public function testUnbindForgetsFactory(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => static fn() => new NameProvider(),
+        ]);
+
+        $container->unbind(NamedObjectInterface::class);
+
+        $this->assertFalse($container->has(NamedObjectInterface::class));
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(NamedObjectInterface::class);
+    }
+
+    public function testUnbindForgetsBuilder(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => ComplexObjectBuilder::class,
+        ]);
+
+        $container->unbind(NamedObjectInterface::class);
+
+        $this->assertFalse($container->has(NamedObjectInterface::class));
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(NamedObjectInterface::class);
+    }
+
+    public function testUnbindForgetsImplementation(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => NameProvider::class,
+        ]);
+
+        $container->unbind(NamedObjectInterface::class);
+
+        $this->assertFalse($container->has(NamedObjectInterface::class));
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(NamedObjectInterface::class);
+    }
+
+    public function testUnbindForgetsInjectedInstance(): void
+    {
+        $container = new Container();
+        $container->inject(NamedObjectInterface::class, new NameProvider());
+
+        $container->unbind(NamedObjectInterface::class);
+
+        $this->assertFalse($container->has(NamedObjectInterface::class));
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(NamedObjectInterface::class);
+    }
+
+    public function testUnbindForgetsAlreadyBuiltService(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => static fn() => new NameProvider(),
+        ]);
+
+        $this->assertInstanceOf(NameProvider::class, $container->get(NamedObjectInterface::class));
+
+        $container->unbind(NamedObjectInterface::class);
+
+        $this->assertFalse($container->has(NamedObjectInterface::class));
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get(NamedObjectInterface::class);
+    }
+
+    public function testUnbindIgnoresUnknownServiceId(): void
+    {
+        $container = new Container();
+
+        $container->unbind(NamedObjectInterface::class);
+
+        $this->assertFalse($container->has(NamedObjectInterface::class));
+    }
+
+    public function testRejectedInjectionLeavesContainerUntouched(): void
+    {
+        $container = new Container();
+        $accepted = new SimpleObject();
+        $container->inject(SimpleObject::class, $accepted);
+
+        try {
+            $container->inject(SimpleObject::class, new NameProvider());
+            $this->fail('Expected a type mismatch');
+        } catch (Exception $e) {
+            $this->assertStringContainsString('Expected instance of', $e->getMessage());
+        }
+
+        $this->assertSame($accepted, $container->get(SimpleObject::class));
+    }
+
+    public function testItIteratesOverEveryRegistration(): void
+    {
+        $factory = static fn() => new NameProvider();
+        $injected = new SimpleObject();
+
+        $container = new Container([
+            NamedObjectInterface::class => $factory,
+            ComplexObject::class => ComplexObjectBuilder::class,
+            SomeAbstractObject::class => NameProvider::class,
+        ]);
+        $container->inject(SimpleObject::class, $injected);
+
+        $this->assertEquals([
+            NamedObjectInterface::class => $factory,
+            ComplexObject::class => ComplexObjectBuilder::class,
+            SomeAbstractObject::class => NameProvider::class,
+            SimpleObject::class => $injected,
+        ], iterator_to_array($container));
+    }
+
+    public function testItDoesNotIterateOverServicesBuiltOnDemand(): void
+    {
+        $container = new Container();
+
+        $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
+        $this->assertTrue($container->has(SimpleObject::class));
+        $this->assertTrue($container->has(ContainerInterface::class));
+
+        $this->assertSame([], iterator_to_array($container));
+    }
+
+    public function testItCanBeIteratedOverMoreThanOnce(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => NameProvider::class,
+        ]);
+
+        $first = iterator_to_array($container);
+
+        $this->assertSame($first, iterator_to_array($container));
+    }
+
+    public function testIterationFollowsRegistrationChanges(): void
+    {
+        $container = new Container([
+            NamedObjectInterface::class => NameProvider::class,
+        ]);
+
+        // Rebinding to another kind must not duplicate the ID
+        $container->set(NamedObjectInterface::class, ComplexObjectBuilder::class);
+
+        $this->assertSame([
+            NamedObjectInterface::class => ComplexObjectBuilder::class,
+        ], iterator_to_array($container));
+
+        $container->unbind(NamedObjectInterface::class);
+
+        $this->assertSame([], iterator_to_array($container));
+    }
+
+    public function testEveryRegistrationIsClassifiableAsBound(): void
+    {
+        $container = new Container([
+            ComplexObject::class => new CallableBuilder('example'),
+            NamedObjectInterface::class => ComplexObjectBuilder::class,
+            SomeAbstractObject::class => NameProvider::class,
+        ]);
+        $container->inject(SimpleObject::class, new SimpleObject());
+
+        $kinds = [];
+
+        foreach ($container as $id => $registration) {
+            $kinds[$id] = match (true) {
+                is_callable($registration) => 'factory',
+                is_a($registration, Builder::class, true) => 'builder',
+                is_string($registration) => 'implementation',
+                default => 'injected',
+            };
+        }
+
+        $this->assertEquals([
+            // An invokable Builder is a factory: callables win, as they do in bind()
+            ComplexObject::class => 'factory',
+            NamedObjectInterface::class => 'builder',
+            SomeAbstractObject::class => 'implementation',
+            SimpleObject::class => 'injected',
+        ], $kinds);
     }
 }
