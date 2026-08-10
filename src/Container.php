@@ -405,8 +405,11 @@ class Container implements ContainerInterface, IteratorAggregate
 
     public function getIterator(): Traversable
     {
-        return take($this->factories, $this->builders, $this->implementations, $this->prebuilt)
-            ->stream()
-            ->keys();
+        return take(
+            $this->factories,
+            $this->builders,
+            $this->implementations,
+            $this->prebuilt,
+        )->keys();
     }
 }
