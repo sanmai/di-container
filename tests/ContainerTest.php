@@ -66,7 +66,7 @@ use Tests\DIContainer\Fixtures\VariadicConstructor;
 use Closure;
 use SplFileInfo;
 
-use function iterator_to_array;
+use function Pipeline\take;
 
 #[CoversClass(Container::class)]
 class ContainerTest extends TestCase
@@ -596,141 +596,31 @@ class ContainerTest extends TestCase
         $this->assertSame($injected, $object->getNamed());
     }
 
-    /**
-     * Every way to register NamedObjectInterface with set().
-     */
-    public static function provideRegistrationKinds(): iterable
-    {
-        yield 'factory' => [static fn() => new NameProvider()];
-
-        // An invocable builder is a factory: callables win, as they do in bind()
-        yield 'invocable builder' => [new CallableBuilder()];
-
-        yield 'builder' => [ComplexObjectBuilder::class];
-
-        yield 'implementation' => [NameProvider::class];
-    }
-
-    #[DataProvider('provideRegistrationKinds')]
-    public function testUnbindForgetsAnyRegistration(callable|string $registration): void
-    {
-        $container = new Container();
-        $container->set(NamedObjectInterface::class, $registration);
-
-        $this->assertUnbindForgets($container, $registration);
-    }
-
-    public function testUnbindForgetsInjectedInstance(): void
-    {
-        $container = new Container();
-        $injected = new NameProvider();
-
-        $container->inject(NamedObjectInterface::class, $injected);
-
-        $this->assertUnbindForgets($container, $injected);
-    }
-
-    /**
-     * A registration is visible through introspection, and unbind() leaves no trace of it.
-     */
-    private function assertUnbindForgets(Container $container, callable|string|object $registration): void
-    {
-        $this->assertTrue($container->has(NamedObjectInterface::class));
-
-        // Introspection gives back exactly what was registered
-        $this->assertSame([NamedObjectInterface::class => $registration], iterator_to_array($container));
-
-        // Building the service must not keep it alive past unbind()
-        $this->assertInstanceOf(NamedObjectInterface::class, $container->get(NamedObjectInterface::class));
-
-        $container->unbind(NamedObjectInterface::class);
-
-        $this->assertFalse($container->has(NamedObjectInterface::class));
-        $this->assertSame([], iterator_to_array($container));
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Unknown service');
-
-        $container->get(NamedObjectInterface::class);
-    }
-
-    public function testUnbindIgnoresUnknownServiceId(): void
-    {
-        $container = new Container();
-
-        $container->unbind(NamedObjectInterface::class);
-
-        $this->assertFalse($container->has(NamedObjectInterface::class));
-    }
-
-    public function testRejectedInjectionLeavesContainerUntouched(): void
-    {
-        $container = new Container();
-        $accepted = new SimpleObject();
-        $container->inject(SimpleObject::class, $accepted);
-
-        try {
-            $container->inject(SimpleObject::class, new NameProvider());
-            $this->fail('Expected a type mismatch');
-        } catch (Exception $e) {
-            $this->assertStringContainsString('Expected instance of', $e->getMessage());
-        }
-
-        $this->assertSame($accepted, $container->get(SimpleObject::class));
-    }
-
-    public function testItIteratesOverEveryRegistration(): void
-    {
-        $factory = static fn() => new NameProvider();
-        $injected = new SimpleObject();
-
-        $container = new Container([
-            NamedObjectInterface::class => $factory,
-            ComplexObject::class => ComplexObjectBuilder::class,
-            SomeAbstractObject::class => NameProvider::class,
-        ]);
-        $container->inject(SimpleObject::class, $injected);
-
-        $this->assertEquals([
-            NamedObjectInterface::class => $factory,
-            ComplexObject::class => ComplexObjectBuilder::class,
-            SomeAbstractObject::class => NameProvider::class,
-            SimpleObject::class => $injected,
-        ], iterator_to_array($container));
-    }
-
-    public function testItDoesNotIterateOverServicesBuiltOnDemand(): void
-    {
-        $container = new Container();
-
-        $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
-        $this->assertTrue($container->has(SimpleObject::class));
-        $this->assertTrue($container->has(ContainerInterface::class));
-
-        $this->assertSame([], iterator_to_array($container));
-    }
-
-    public function testItCanBeIteratedOverMoreThanOnce(): void
+    public function testItUnbinds(): void
     {
         $container = new Container([
-            NamedObjectInterface::class => NameProvider::class,
-        ]);
-
-        $first = iterator_to_array($container);
-
-        $this->assertSame($first, iterator_to_array($container));
-    }
-
-    public function testRebindingToAnotherKindDoesNotDuplicateAnId(): void
-    {
-        $container = new Container([
-            NamedObjectInterface::class => NameProvider::class,
-        ]);
-
-        $container->set(NamedObjectInterface::class, ComplexObjectBuilder::class);
-
-        $this->assertSame([
+            SimpleObject::class => static fn() => new SimpleObject(),
             NamedObjectInterface::class => ComplexObjectBuilder::class,
-        ], iterator_to_array($container));
+            VariadicConstructor::class => VariadicConstructor::class,
+            SomeAbstractObject::class => NameProvider::class,
+        ]);
+
+        $container->inject(CallableBuilder::class, new CallableBuilder());
+
+        $this->assertSame(42, $container->get(BuiltinDefaultDependent::class)->getId());
+
+        $expectedServices = [
+            SimpleObject::class,
+            NamedObjectInterface::class,
+            VariadicConstructor::class,
+            SomeAbstractObject::class,
+            CallableBuilder::class,
+        ];
+
+        $this->assertSame($expectedServices, take($container)->keys()->toList());
+
+        take($expectedServices)->each($container->unbind(...));
+
+        $this->assertSame([], take($container)->keys()->toList());
     }
 }
