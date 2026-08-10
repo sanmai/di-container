@@ -155,4 +155,17 @@ class ContainerBench
         ]);
         $container->get(FixtureA1::class);
     }
+
+    /**
+     * Benchmark: Resolve a class needing 20 interfaces, against 20 registrations.
+     * Measures: providersForType(), which scans every registration once per interface.
+     */
+    #[Warmup(1)]
+    #[Revs(50)]
+    #[Iterations(3)]
+    public function benchInterfaceResolution(): void
+    {
+        $container = new Container(self::INTERFACE_REGISTRATIONS);
+        $container->get(FixtureEConsumer::class);
+    }
 }
