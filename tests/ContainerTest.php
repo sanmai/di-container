@@ -463,6 +463,27 @@ class ContainerTest extends TestCase
         $container->inject(DependentObject::class, new SimpleObject());
     }
 
+    public function testInjectKeepsPriorRegistration(): void
+    {
+        $canary = new SimpleObject();
+
+        $container = new Container([
+            SimpleObject::class => static fn() => $canary,
+        ]);
+
+        $this->assertSame($canary, $container->get(SimpleObject::class));
+
+        try {
+            $container->inject(SimpleObject::class, new NameProvider());
+            $this->fail('Expected a type mismatch exception');
+        } catch (Exception $exception) {
+            $this->assertStringContainsString('Expected instance of', $exception->getMessage());
+        }
+
+        $this->assertTrue($container->has(SimpleObject::class));
+        $this->assertSame($canary, $container->get(SimpleObject::class));
+    }
+
     public function testInjectOverridesBind(): void
     {
         $container = new Container();

@@ -153,10 +153,10 @@ class Container implements ContainerInterface
      */
     public function inject(string $id, object $value): void
     {
+        self::assertType($id, $value);
+
         // Injected pre-built dependencies override everything else at the time of injection
         unset($this->values[$id], $this->factories[$id], $this->builders[$id], $this->implementations[$id]);
-
-        self::assertType($id, $value);
 
         $this->prebuilt[$id] = $value;
     }
