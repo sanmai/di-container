@@ -463,7 +463,7 @@ class ContainerTest extends TestCase
         $container->inject(DependentObject::class, new SimpleObject());
     }
 
-    public function testFailedInjectKeepsPriorRegistration(): void
+    public function testInjectKeepsPriorRegistration(): void
     {
         $canary = new SimpleObject();
 
