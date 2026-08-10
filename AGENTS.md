@@ -1,89 +1,98 @@
-# CLAUDE.md
+# AGENTS.md
 
-A PSR-11 dependency injection container with reflection-based autowiring. Three source files, no configuration format, no compilation step.
+A PSR-11 dependency injection container that resolves dependencies with reflection. It has few source files, no configuration format, and no compilation step.
 
 @README.md
 
-The README is the specification. This file records what the README does not: the internal invariants, the quality gates, and the traps.
+README.md is the specification. This file gives the data that README.md does not give.
 
 ## Commands
 
+Run all the CI steps:
 ```bash
-make -j -k                # everything: cs, phpunit, phpstan x3, infection, composer-validate, yamllint
-make phpunit              # tests with coverage into build/logs (infection reads it from there)
-make phpstan              # three configs, see Quality Gates
-make cs                   # php-cs-fixer, writes fixes
-make infection            # mutation testing; depends on the phpunit coverage run
-make benchmark            # phpbench with opcache and JIT
+make -j -k
+```
 
+Run one test:
+```bash
 vendor/bin/phpunit tests/ContainerTest.php --filter testItBuildsSimpleObjects
+```
+
+Correct the code style with PHP CS Fixer:
+```bash
+make cs
+```
+
+Run PHPBench with OPcache and JIT:
+```bash
+make benchmark
 ```
 
 ## Source
 
-| File | What it holds |
-|------|---------------|
-| `src/Container.php` | Everything: registration, resolution, autowiring, introspection |
-| `src/Builder.php` | `Builder<T>` with one method, `build(): T`; template is covariant |
+| File | Content |
+|------|---------|
+| `src/Container.php` | All the logic: registration, resolution, autowiring, and introspection |
+| `src/Builder.php` | `Builder<T>`, which has one method, `build(): T`. The template is covariant. |
 | `src/Exception.php` | `extends InvalidArgumentException implements NotFoundExceptionInterface` |
 
 ## Internal Invariants
 
-Five arrays hold state. Break one of these rules and the tests that catch it are not obvious:
+The container keeps its state in internal arrays. If you break one of these rules, the test that finds the error is difficult to identify.
 
-- **One array per ID.** `values` (resolved cache), `prebuilt` (injected), `factories`, `builders`, `implementations`. Both `bind()` and `inject()` call `remove()` first, so an ID is never in two of them. `getIterator()` relies on this: it concatenates four arrays and expects no duplicate keys.
-- **`values` is derived, never iterated.** The constructor seeds `values[ContainerInterface::class] = $this`, and `get()` caches every resolution there. Iteration covers registrations only, so its contents do not depend on what has been resolved so far.
-- **`is_callable()` is checked before `Builder`.** An invokable object that also implements `Builder` registers as a factory. This is for backward compatibility; `CallableBuilder` in the fixtures pins it.
-- **`inject()` asserts the type before it calls `remove()`.** A rejected injection leaves the container untouched instead of half-wiped (#89).
-- **`assertType()` opts out for non-class IDs**: an ID with a dot, or without a backslash, skips the check. That is what makes `bind('app.repository', ...)` work.
-- **`get()` guards `implementations[$id] !== $id`.** A class registered as its own implementation would otherwise recurse forever.
-- **`getIterator()` returns `Traversable`, not `Generator`.** Downstream containers get scanned by reflection for `getFoo(): ConcreteType` accessors; an interface return type keeps this method out of such scans.
-- **`has()` is pessimistic.** It reports registrations and cached values only, never "could be autowired".
+- **Each service ID is in one array only.** The arrays are `values` for the resolved services, `prebuilt` for the injected instances, `factories`, `builders`, and `implementations`. `bind()` and `inject()` call `remove()` first, and thus an ID cannot be in two arrays. `getIterator()` obeys this rule: it joins four arrays and expects no duplicate keys.
+- **`values` holds derived data, and the iterator does not include it.** The constructor puts the container into `values[ContainerInterface::class]`, and `get()` puts each resolved service there. Iteration gives the registrations only. As a result, the sequence does not change with the services that you resolved before.
+- **`bind()` examines `is_callable()` before `Builder`.** An object that is invokable and also implements `Builder` becomes a factory. This keeps the behavior of the initial code. The `CallableBuilder` fixture tests this rule.
+- **`inject()` examines the type before it calls `remove()`.** If the type is not correct, `inject()` throws an exception and the container does not change (#89).
+- **`assertType()` does not examine non-class IDs.** It ignores an ID that contains a dot, and an ID that does not contain a backslash. This lets `bind('app.repository', ...)` operate.
+- **`get()` examines `implementations[$id] !== $id`.** Without this examination, a class that is registered as its own implementation causes infinite recursion.
+- **`getIterator()` returns `Traversable`, not `Generator`.** Tools scan containers with reflection for accessors that have the form `getFoo(): ConcreteType`. An interface as the return type keeps this method out of such scans.
+- **`has()` gives a careful answer.** It reports the registrations and the cached values. It does not try to autowire the service.
 
 ## Limits by Design
 
-Not bugs, and each has a test:
+These are not defects. Each one has a test.
 
-- Composite types (union, intersection) are not resolved; optional ones fall back to the default value, required ones make the service unresolvable.
-- Variadic parameters are skipped and left empty.
-- Built-in types (int, string) are not injected; optional ones fall back to the default value.
-- An interface resolves only when exactly one registration produces a compatible type. Zero falls back to a default value; two or more is unresolvable.
-- No circular dependency detection. The first test that touches the cycle exposes it.
+- The container does not resolve composite types, such as unions and intersections. If the parameter is optional, the container uses the default value. If the parameter is necessary, the container cannot make the service.
+- The container ignores variadic parameters and gives no values for them.
+- The container does not inject built-in types, such as `int` and `string`. If the parameter is optional, the container uses the default value.
+- The container resolves an interface only if one registration makes a compatible type. If no registration makes one, the container uses the default value. If two or more registrations make one, the container cannot resolve the parameter.
+- The container does not find circular dependencies, yet. The first test of such a service shows the error.
 
 ## Quality Gates
 
-- **Infection at 100%**: `--min-msi=100 --min-covered-msi=100 --with-uncovered`. Every new branch, `unset()`, and comparison needs a test that kills its mutant. When a mutant will not die, the usual cause is code that earns nothing, not a missing test.
-- **PHPStan**: `level: max` on `src` (`.phpstan.src.neon`) and on `tests/Fixtures` (`.phpstan.fixtures.neon`); `level: 2` on `src` plus `tests` (`.phpstan.neon`). Fixtures are held to max on purpose - they dogfood the generic annotations.
-- **PHPUnit** runs with `requireCoverageMetadata`, `failOnRisky`, and random order. A new test class needs `#[CoversClass]`.
-- **Support matrix is wider than any local run.** CI runs the tests on 8.2, 8.3, 8.4, 8.5, and `latest`, and once more against `psr/container` v1 instead of v2. Locally everything runs on one PHP version, so a v1-only or 8.5-only break passes here and fails on CI.
-- The test matrix removes phpstan, infection, and php-cs-fixer before it installs. Tests must not need any dev tool other than PHPUnit.
+- **Infection must report 100%**: `--min-msi=100 --min-covered-msi=100 --with-uncovered`. Each new branch, `unset()`, and comparison must have a test that kills its mutant. If a mutant stays alive, first look for code that does nothing. Then look for a missing test.
+- **PHPStan** runs three times: `level: max` on `src` with `.phpstan.src.neon`, `level: max` on `tests/Fixtures` with `.phpstan.fixtures.neon`, and `level: 2` on `src` and `tests` together with `.phpstan.neon`. The fixtures have the maximum level because they use the generic annotations of the library.
+- **PHPUnit** runs with `requireCoverageMetadata`, `failOnRisky`, and a random order. Each new test class must have `#[CoversClass]`.
+- **CI examines more configurations than a local run.** CI runs the tests with PHP 8.2, 8.3, 8.4, 8.5, and `latest`. It runs them one more time with `psr/container` v1 in the place of v2. A local run uses one PHP version. Thus an error that occurs only with v1, or only with PHP 8.5, is not visible before CI.
+- The CI test job removes phpstan, infection, and php-cs-fixer before it installs the dependencies. The tests must use no development tool but PHPUnit.
 
 ## Benchmarks
 
-Fixtures are generated by `benchmarks/generate-fixtures.php` and gitignored:
+`benchmarks/generate-fixtures.php` makes the fixtures, and Git ignores them.
 
-| Fixture | Shape | Reaches |
-|---------|-------|---------|
-| A | 100-class linear chain | autowiring, and the resolved cache on a second `get()` |
-| B | 1000 independent classes | autowiring without recursion |
-| C | 500-class linear chain | deep recursion |
-| D | Builder with 20 parallel dependencies | the builder path |
-| E | 20 interfaces, one consumer of all of them | `providersForType()` |
+| Fixture | Shape | Code path |
+|---------|-------|-----------|
+| A | A chain of 100 classes | autowiring, and the cache on a second `get()` |
+| B | 1000 independent classes | autowiring with no recursion |
+| C | A chain of 500 classes | deep recursion |
+| D | A builder with 20 parallel dependencies | the builder |
+| E | 20 interfaces and one consumer of all of them | `providersForType()` |
 
-`providersForType()` runs once per unresolved interface parameter and scans every registration, so it is the one function where a rewrite shows up in the numbers. Fixture E exists because nothing else reaches it.
+`providersForType()` runs one time for each interface parameter that the container cannot resolve directly, and it examines all the registrations. Thus a change to this function is visible in the results. Fixture E is necessary because no other benchmark uses this function.
 
-Benchmark noise on a loaded machine is larger than most real changes. Interleave the variants (A/B/A/B), pin to one core, and keep the swap down to a single file.
+On a busy machine, the noise is more than the effect of most changes. Run the variants in turn (A/B/A/B), attach the process to one core, and change one file only between the variants.
 
-A new benchmark subject needs a new row in the coverage table in `benchmarks/README.md`. That file is not internal: the benchmark workflow appends it verbatim to a sticky comment on every pull request that touches a `.php` file, right below the results. A subject missing from the table shows a measurement that the table does not explain.
+Each new benchmark must have a row in the table in `benchmarks/README.md`. That file is not internal: the benchmark workflow adds it to a comment on each pull request that changes a `.php` file, below the results. If a benchmark is not in the table, the comment shows a measurement with no explanation.
 
 ## The `infection/` Directory
 
-A checkout of Infection sits in the repository root, hidden by `.git/info/exclude` rather than `.gitignore`. It is not part of this library. It is the downstream consumer that motivates the introspection API, kept here read-only for reference. Never change anything under it.
+The repository root contains a copy of Infection. `.git/info/exclude` hides it from Git, not `.gitignore`. It is not a part of this library. It is the primary user of the introspection API, and it is here for reference only. Do not change any file in it.
 
 ## Conventions
 
-- No emoji, in code or in commit messages.
-- Data providers go above the tests that use them.
-- Fixtures live in `tests/Fixtures/`; reuse one before adding another.
-- Every PHP file starts with the BSD header from `LICENSE`. `make cs` inserts it, so a new file does not need it by hand.
-- `make cs` also applies Yoda conditions, strict comparisons, and `use function` imports for global functions. Write in that style or let the fixer rewrite it, but do not fight it.
+- Do not use emoji, in the code or in the commit messages.
+- Put the data providers above the tests that use them.
+- Keep the fixtures in `tests/Fixtures/`. Use an existing fixture before you make a new one.
+- Each PHP file starts with the BSD header from `LICENSE`. `make cs` adds the header, and thus you do not write it manually.
+- `make cs` also applies Yoda conditions, strict comparisons, and `use function` imports for the global functions. Write the code in this style, or let the tool correct it.
