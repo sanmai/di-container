@@ -66,6 +66,9 @@ use Tests\DIContainer\Fixtures\VariadicConstructor;
 use Closure;
 use SplFileInfo;
 
+use function iterator_to_array;
+use function Pipeline\take;
+
 #[CoversClass(Container::class)]
 class ContainerTest extends TestCase
 {
@@ -592,5 +595,37 @@ class ContainerTest extends TestCase
 
         $this->assertSame(42, $object->getId());
         $this->assertSame($injected, $object->getNamed());
+    }
+
+    public function testItRemoves(): void
+    {
+        $container = new Container([
+            SimpleObject::class => static fn() => new SimpleObject(),
+            NamedObjectInterface::class => ComplexObjectBuilder::class,
+            VariadicConstructor::class => VariadicConstructor::class,
+            SomeAbstractObject::class => NameProvider::class,
+        ], [
+            'app.locator' => static fn() => new SimpleObject(),
+        ]);
+
+        $container->inject(CallableBuilder::class, new CallableBuilder());
+
+        $this->assertSame(42, $container->get(BuiltinDefaultDependent::class)->getId());
+
+        $expectedServices = [
+            SimpleObject::class,
+            'app.locator',
+            NamedObjectInterface::class,
+            VariadicConstructor::class,
+            SomeAbstractObject::class,
+            CallableBuilder::class,
+        ];
+
+        $this->assertSame($expectedServices, take($container)->toList());
+        $this->assertSame($expectedServices, iterator_to_array($container), "Duplicate keys found");
+
+        take($expectedServices)->each($container->remove(...));
+
+        $this->assertSame([], take($container)->toList());
     }
 }
