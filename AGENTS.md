@@ -1,10 +1,10 @@
 # AGENTS.md
 
-A PSR-11 dependency injection container that resolves dependencies with reflection. It has few source files, no configuration format, and no compilation step.
+This library is a PSR-11 dependency injection container. It resolves dependencies with reflection. It has few source files, no configuration format, and no compilation step.
 
 @README.md
 
-README.md is the specification. This file gives the data that README.md does not give.
+README.md specifies the behavior. This file explains you what README.md does not.
 
 ## Commands
 
@@ -38,16 +38,16 @@ make benchmark
 
 ## Internal Invariants
 
-The container keeps its state in internal arrays. If you break one of these rules, the test that finds the error is difficult to identify.
+The container retains its state in internal arrays. These rules are thoroughly unit tested:
 
-- **Each service ID is in one array only.** The arrays are `values` for the resolved services, `prebuilt` for the injected instances, `factories`, `builders`, and `implementations`. `bind()` and `inject()` call `remove()` first, and thus an ID cannot be in two arrays. `getIterator()` obeys this rule: it joins four arrays and expects no duplicate keys.
-- **`values` holds derived data, and the iterator does not include it.** The constructor puts the container into `values[ContainerInterface::class]`, and `get()` puts each resolved service there. Iteration gives the registrations only. As a result, the sequence does not change with the services that you resolved before.
+- **The container keeps each service ID in one array only.** The arrays are `values` for the resolved services, `prebuilt` for the injected instances, `factories`, `builders`, and `implementations`. `bind()` and `inject()` call `remove()` first, and thus an ID cannot be in two arrays. `getIterator()` obeys this rule: it joins four arrays and expects no duplicate keys.
+- **The iterator ignores `values`, which holds derived data.** The constructor puts the container into `values[ContainerInterface::class]`, and `get()` puts each resolved service there. The iterator gives the registrations only. As a result, you get the same sequence before and after you resolve a service.
 - **`bind()` examines `is_callable()` before `Builder`.** An object that is invokable and also implements `Builder` becomes a factory. This keeps the behavior of the initial code. The `CallableBuilder` fixture tests this rule.
 - **`inject()` examines the type before it calls `remove()`.** If the type is not correct, `inject()` throws an exception and the container does not change (#89).
 - **`assertType()` does not examine non-class IDs.** It ignores an ID that contains a dot, and an ID that does not contain a backslash. This lets `bind('app.repository', ...)` operate.
 - **`get()` examines `implementations[$id] !== $id`.** Without this examination, a class that is registered as its own implementation causes infinite recursion.
 - **`getIterator()` returns `Traversable`, not `Generator`.** Tools scan containers with reflection for accessors that have the form `getFoo(): ConcreteType`. An interface as the return type keeps this method out of such scans.
-- **`has()` gives a careful answer.** It reports the registrations and the cached values. It does not try to autowire the service.
+- **`has()` answers from the registrations only.** It reports the registrations and the cached values. It does not try to autowire the service.
 
 ## Limits by Design
 
@@ -65,7 +65,7 @@ These are not defects. Each one has a test.
 - **PHPStan** runs three times: `level: max` on `src` with `.phpstan.src.neon`, `level: max` on `tests/Fixtures` with `.phpstan.fixtures.neon`, and `level: 2` on `src` and `tests` together with `.phpstan.neon`. The fixtures have the maximum level because they use the generic annotations of the library.
 - **PHPUnit** runs with `requireCoverageMetadata`, `failOnRisky`, and a random order. Each new test class must have `#[CoversClass]`.
 - **CI examines more configurations than a local run.** CI runs the tests with PHP 8.2, 8.3, 8.4, 8.5, and `latest`. It runs them one more time with `psr/container` v1 in the place of v2. A local run uses one PHP version. Thus an error that occurs only with v1, or only with PHP 8.5, is not visible before CI.
-- The CI test job removes phpstan, infection, and php-cs-fixer before it installs the dependencies. The tests must use no development tool but PHPUnit.
+- The CI test job removes phpstan, infection, and php-cs-fixer before it installs the dependencies. Do not make a test that needs a tool other than PHPUnit.
 
 ## Benchmarks
 
@@ -81,13 +81,9 @@ These are not defects. Each one has a test.
 
 `providersForType()` runs one time for each interface parameter that the container cannot resolve directly, and it examines all the registrations. Thus a change to this function is visible in the results. Fixture E is necessary because no other benchmark uses this function.
 
-On a busy machine, the noise is more than the effect of most changes. Run the variants in turn (A/B/A/B), attach the process to one core, and change one file only between the variants.
+A busy machine makes more noise than most changes make difference. Run the variants in turn (A/B/A/B), attach the process to one core, and change one file only between the variants.
 
-Each new benchmark must have a row in the table in `benchmarks/README.md`. That file is not internal: the benchmark workflow adds it to a comment on each pull request that changes a `.php` file, below the results. If a benchmark is not in the table, the comment shows a measurement with no explanation.
-
-## The `infection/` Directory
-
-The repository root contains a copy of Infection. `.git/info/exclude` hides it from Git, not `.gitignore`. It is not a part of this library. It is the primary user of the introspection API, and it is here for reference only. Do not change any file in it.
+When you add a benchmark, add a row for it to the table in `benchmarks/README.md`. That file is not internal: the benchmark workflow adds it to a comment on each pull request that changes a `.php` file, below the results. If you omit the row, the comment shows a measurement with no explanation.
 
 ## Conventions
 
