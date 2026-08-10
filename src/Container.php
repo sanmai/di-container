@@ -58,7 +58,7 @@ use function class_exists;
 use function interface_exists;
 
 /**
- * @implements IteratorAggregate<class-string<object>|non-empty-string, callable|class-string<object>|object>
+ * @implements IteratorAggregate<array-key, class-string<object>|non-empty-string>
  */
 class Container implements ContainerInterface, IteratorAggregate
 {
@@ -405,9 +405,8 @@ class Container implements ContainerInterface, IteratorAggregate
 
     public function getIterator(): Traversable
     {
-        yield from $this->factories;
-        yield from $this->builders;
-        yield from $this->implementations;
-        yield from $this->prebuilt;
+        return take($this->factories, $this->builders, $this->implementations, $this->prebuilt)
+            ->stream()
+            ->keys();
     }
 }

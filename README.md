@@ -146,10 +146,10 @@ $container->has(LoggerInterface::class); // false
 
 ## Introspection
 
-To inspect the registered services, iterate over the container. It exposes everything registered, and the order is unspecified.
+To inspect the registered service IDs, iterate over the container. Services created through autowiring are not included, and the order is unspecified.
 
 ```php
-foreach ($container as $serviceId => $registration) {
+foreach ($container as $serviceId) {
     // ...
 }
 ```

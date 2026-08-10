@@ -596,7 +596,7 @@ class ContainerTest extends TestCase
         $this->assertSame($injected, $object->getNamed());
     }
 
-    public function testItUnbinds(): void
+    public function testItRemoves(): void
     {
         $container = new Container([
             SimpleObject::class => static fn() => new SimpleObject(),
@@ -620,10 +620,10 @@ class ContainerTest extends TestCase
             CallableBuilder::class,
         ];
 
-        $this->assertSame($expectedServices, take($container)->keys()->toList());
+        $this->assertSame($expectedServices, take($container)->toList());
 
         take($expectedServices)->each($container->remove(...));
 
-        $this->assertSame([], take($container)->keys()->toList());
+        $this->assertSame([], take($container)->toList());
     }
 }
