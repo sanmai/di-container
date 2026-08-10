@@ -465,13 +465,13 @@ class ContainerTest extends TestCase
 
     public function testFailedInjectKeepsPriorRegistration(): void
     {
-        $bound = new SimpleObject();
+        $canary = new SimpleObject();
 
         $container = new Container([
-            SimpleObject::class => static fn() => $bound,
+            SimpleObject::class => static fn() => $canary,
         ]);
 
-        $this->assertSame($bound, $container->get(SimpleObject::class));
+        $this->assertSame($canary, $container->get(SimpleObject::class));
 
         try {
             $container->inject(SimpleObject::class, new NameProvider());
@@ -481,7 +481,7 @@ class ContainerTest extends TestCase
         }
 
         $this->assertTrue($container->has(SimpleObject::class));
-        $this->assertSame($bound, $container->get(SimpleObject::class));
+        $this->assertSame($canary, $container->get(SimpleObject::class));
     }
 
     public function testInjectOverridesBind(): void
