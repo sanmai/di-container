@@ -64,16 +64,14 @@ These are not defects. Each one has a test.
 - **Infection must report 100%**: Each new branch, `unset()`, and comparison must have a test that kills its mutant. If a mutant stays alive, first look for code that does nothing. Then look for a missing test.
 - **PHPStan** runs three times: `level: max` on `src` with `.phpstan.src.neon`, `level: max` on `tests/Fixtures` with `.phpstan.fixtures.neon`, and `level: 2` on `src` and `tests` together with `.phpstan.neon`. The fixtures have the maximum level because they use the generic annotations of the library.
 - **PHPUnit** runs with `requireCoverageMetadata`, `failOnRisky`, and a random order. Each new test class must have `#[CoversClass]`.
-- **CI examines more configurations than a local run.** CI runs the tests with various PHP  versions up to `latest`. It runs them one more time with `psr/container` v1 in the place of v2. A local run uses one PHP version. Thus only CI finds an error that occurs with v1 alone, or with PHP 8.N alone.
+- **CI examines more configurations than a local run.** CI runs the tests with various PHP versions up to `latest`. It runs them one more time with `psr/container` v1 in the place of v2. A local run uses one PHP version. Thus only CI finds an error that occurs with v1 alone, or with PHP 8.N alone.
 - The CI test job removes phpstan, infection, and php-cs-fixer before it installs the dependencies. Do not make a test that needs a tool other than PHPUnit.
 
 ## Benchmarks
 
-`benchmarks/generate-fixtures.php` makes the fixtures, and Git ignores them. 
+`benchmarks/generate-fixtures.php` makes the fixtures, Git-ignored. `benchmarks/README.md` gives each benchmark, the scenario, and the code path that it measures.
 
 @benchmarks/README.md
-
-`benchmarks/README.md` gives each benchmark, the scenario, and the code path that it measures.
 
 When you add a benchmark, add a row for it to the table in `benchmarks/README.md`. That file is not internal: the benchmark workflow adds it to a comment on each pull request that changes a `.php` file, below the results. If you omit the row, the comment shows a measurement with no explanation.
 
