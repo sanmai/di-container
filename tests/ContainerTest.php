@@ -601,34 +601,49 @@ class ContainerTest extends TestCase
     }
 
     /**
-     * Every way to register NamedObjectInterface, with the kind the introspection rules give it.
+     * Every way to register NamedObjectInterface with set(), and the kind it classifies as.
      */
     public static function provideRegistrationKinds(): iterable
     {
-        yield 'factory' => ['factory', static fn(Container $container) => $container->set(NamedObjectInterface::class, static fn() => new NameProvider())];
+        yield 'factory' => [static fn() => new NameProvider(), 'factory'];
 
         // Callables win over builders, as they do in bind()
-        yield 'invocable builder' => ['factory', static fn(Container $container) => $container->set(NamedObjectInterface::class, new CallableBuilder())];
+        yield 'invocable builder' => [new CallableBuilder(), 'factory'];
 
-        yield 'builder' => ['builder', static fn(Container $container) => $container->set(NamedObjectInterface::class, ComplexObjectBuilder::class)];
+        yield 'builder' => [ComplexObjectBuilder::class, 'builder'];
 
-        yield 'implementation' => ['implementation', static fn(Container $container) => $container->set(NamedObjectInterface::class, NameProvider::class)];
-
-        yield 'injected' => ['injected', static fn(Container $container) => $container->inject(NamedObjectInterface::class, new NameProvider())];
+        yield 'implementation' => [NameProvider::class, 'implementation'];
     }
 
     #[DataProvider('provideRegistrationKinds')]
-    public function testUnbindForgetsRegistrationOfEveryKind(string $expectedKind, callable $register): void
+    public function testUnbindForgetsAnyRegistration(callable|string $registration, string $expectedKind): void
     {
         $container = new Container();
-        $register($container);
+        $container->set(NamedObjectInterface::class, $registration);
 
+        $this->assertUnbindForgets($container, $registration, $expectedKind);
+    }
+
+    public function testUnbindForgetsInjectedInstance(): void
+    {
+        $container = new Container();
+        $injected = new NameProvider();
+
+        $container->inject(NamedObjectInterface::class, $injected);
+
+        $this->assertUnbindForgets($container, $injected, 'injected');
+    }
+
+    /**
+     * A registration is visible through introspection, and unbind() leaves no trace of it.
+     */
+    private function assertUnbindForgets(Container $container, callable|string|object $registration, string $expectedKind): void
+    {
         $this->assertTrue($container->has(NamedObjectInterface::class));
 
-        $registrations = iterator_to_array($container);
-
-        $this->assertArrayHasKey(NamedObjectInterface::class, $registrations);
-        $this->assertSame($expectedKind, self::classify($registrations[NamedObjectInterface::class]));
+        // Introspection gives back exactly what was registered
+        $this->assertSame([NamedObjectInterface::class => $registration], iterator_to_array($container));
+        $this->assertSame($expectedKind, self::classify($registration));
 
         // Building the service must not keep it alive past unbind()
         $this->assertInstanceOf(NamedObjectInterface::class, $container->get(NamedObjectInterface::class));
