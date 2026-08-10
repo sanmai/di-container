@@ -15,6 +15,7 @@ composer require sanmai/di-container
 - Automatically resolves class dependencies through reflection
 - Objects are created once and reused
 - Resolve interfaces to concrete implementations
+- Iterate over the registrations to test or debug your wiring
 
 ## Quick Start
 

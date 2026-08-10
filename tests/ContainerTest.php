@@ -766,7 +766,7 @@ class ContainerTest extends TestCase
         }
 
         $this->assertEquals([
-            // An invokable Builder is a factory: callables win, as they do in bind()
+            // An invocable Builder is a factory: callables win, as they do in bind()
             ComplexObject::class => 'factory',
             NamedObjectInterface::class => 'builder',
             SomeAbstractObject::class => 'implementation',
