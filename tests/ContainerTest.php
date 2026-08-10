@@ -66,6 +66,7 @@ use Tests\DIContainer\Fixtures\VariadicConstructor;
 use Closure;
 use SplFileInfo;
 
+use function iterator_to_array;
 use function Pipeline\take;
 
 #[CoversClass(Container::class)]
@@ -621,6 +622,7 @@ class ContainerTest extends TestCase
         ];
 
         $this->assertSame($expectedServices, take($container)->toList());
+        $this->assertSame($expectedServices, iterator_to_array($container), "Duplicate keys found");
 
         take($expectedServices)->each($container->remove(...));
 
