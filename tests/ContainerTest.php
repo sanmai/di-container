@@ -603,6 +603,8 @@ class ContainerTest extends TestCase
             NamedObjectInterface::class => ComplexObjectBuilder::class,
             VariadicConstructor::class => VariadicConstructor::class,
             SomeAbstractObject::class => NameProvider::class,
+        ], [
+            'app.locator' => static fn() => new SimpleObject(),
         ]);
 
         $container->inject(CallableBuilder::class, new CallableBuilder());
@@ -611,6 +613,7 @@ class ContainerTest extends TestCase
 
         $expectedServices = [
             SimpleObject::class,
+            'app.locator',
             NamedObjectInterface::class,
             VariadicConstructor::class,
             SomeAbstractObject::class,
