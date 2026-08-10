@@ -185,4 +185,60 @@ $data = <<<EOF
     EOF;
 file_put_contents($fixtureDir . '/D/FixtureA1Builder.php', $data);
 
+// Fixture E: 20 interfaces, their implementations, and one consumer that needs them all
+echo "Generating Fixture E (20 interfaces with a consumer of all of them)...\n";
+
+@mkdir($fixtureDir . '/E', 0755, true);
+
+$params = '';
+for ($i = 1; $i <= 20; $i++) {
+    $params .= "        private FixtureEInterface{$i} \$dependency{$i},\n";
+
+    $data = <<<EOF
+        <?php
+
+        declare(strict_types=1);
+
+        namespace Benchmarks\DIContainer\Fixtures\E;
+
+        interface FixtureEInterface{$i}
+        {
+        }
+        EOF;
+    file_put_contents($fixtureDir . "/E/FixtureEInterface{$i}.php", $data);
+
+    $data = <<<EOF
+        <?php
+
+        declare(strict_types=1);
+
+        namespace Benchmarks\DIContainer\Fixtures\E;
+
+        class FixtureEProvider{$i} implements FixtureEInterface{$i}
+        {
+        }
+        EOF;
+    file_put_contents($fixtureDir . "/E/FixtureEProvider{$i}.php", $data);
+}
+$params = rtrim($params, ",\n");
+
+$data = <<<EOF
+    <?php
+
+    declare(strict_types=1);
+
+    namespace Benchmarks\DIContainer\Fixtures\E;
+
+    /**
+     * Needs 20 interfaces, so resolving it scans the registrations 20 times over.
+     */
+    class FixtureEConsumer
+    {
+        public function __construct(
+    {$params},
+        ) {}
+    }
+    EOF;
+file_put_contents($fixtureDir . '/E/FixtureEConsumer.php', $data);
+
 echo "Done! Generated fixtures in {$fixtureDir}\n";
