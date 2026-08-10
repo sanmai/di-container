@@ -50,6 +50,9 @@ use PhpBench\Attributes\Revs;
 use PhpBench\Attributes\Warmup;
 use ReflectionClass;
 
+/**
+ * Update benchmarks/README.md when adding a subject.
+ */
 class ContainerBench
 {
     /** @var array<class-string, class-string> */

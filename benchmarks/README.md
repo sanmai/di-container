@@ -8,6 +8,7 @@ When `$container->get($id)` is called, resolution follows this order:
 | Builder | `$this->get($builder)->build()` | Builder class registered |
 | Factory | `$this->factories[$id]($this)` | Factory closure registered |
 | Autowiring | `createService($id)` | Reflect class, resolve dependencies |
+| Interface lookup | `providersForType($type)` | A dependency is an interface or an abstract class |
 
 ### Benchmark Coverage
 
@@ -20,3 +21,4 @@ When `$container->get($id)` is called, resolution follows this order:
 | Builder | Builder | Builder with N parallel dependencies |
 | FactoryNoParams | Factory | Simple factory closure |
 | FactoryWithContainer | Factory | Factory receiving container |
+| InterfaceResolution | Interface lookup | One consumer of 20 interfaces, against 20 registrations |
