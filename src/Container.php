@@ -154,7 +154,13 @@ class Container implements ContainerInterface, IteratorAggregate
      */
     public function remove(string $id): void
     {
-        unset($this->values[$id], $this->factories[$id], $this->builders[$id], $this->implementations[$id], $this->prebuilt[$id]);
+        unset(
+            $this->values[$id],
+            $this->factories[$id],
+            $this->builders[$id],
+            $this->implementations[$id],
+            $this->prebuilt[$id],
+        );
     }
 
     /**
