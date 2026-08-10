@@ -131,7 +131,7 @@ class Container implements ContainerInterface, IteratorAggregate
     public function bind(string $id, callable|string $value): void
     {
         // Registered dependencies override everything else at bind time
-        $this->unbind($id);
+        $this->remove($id);
 
         // A value can be a callable and also implement our `Builder` interface:
         // we must treat such cases as factories, not builders, to ensure
@@ -152,7 +152,7 @@ class Container implements ContainerInterface, IteratorAggregate
     /**
      * @param class-string<object>|non-empty-string $id
      */
-    public function unbind(string $id): void
+    public function remove(string $id): void
     {
         unset($this->values[$id], $this->factories[$id], $this->builders[$id], $this->implementations[$id], $this->prebuilt[$id]);
     }
@@ -169,7 +169,7 @@ class Container implements ContainerInterface, IteratorAggregate
         self::assertType($id, $value);
 
         // Injected pre-built dependencies override everything else at the time of injection
-        $this->unbind($id);
+        $this->remove($id);
 
         $this->prebuilt[$id] = $value;
     }

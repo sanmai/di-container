@@ -136,10 +136,10 @@ $container->inject(LoggerInterface::class, $logger);
 
 ## Removing Services
 
-Use `unbind()` to forget a service together with any instances.
+Use `remove()` to forget a service together with any instances.
 
 ```php
-$container->unbind(LoggerInterface::class);
+$container->remove(LoggerInterface::class);
 
 $container->has(LoggerInterface::class); // false
 ```

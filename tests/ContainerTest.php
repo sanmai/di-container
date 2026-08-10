@@ -622,7 +622,7 @@ class ContainerTest extends TestCase
 
         $this->assertSame($expectedServices, take($container)->keys()->toList());
 
-        take($expectedServices)->each($container->unbind(...));
+        take($expectedServices)->each($container->remove(...));
 
         $this->assertSame([], take($container)->keys()->toList());
     }
