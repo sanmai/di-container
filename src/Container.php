@@ -365,7 +365,7 @@ class Container implements ContainerInterface, IteratorAggregate
     private function providersForType(string $type): array
     {
         /** @var list<class-string<object>> */
-        return take($this)
+        return take($this->getIterator())
             ->keys()
             ->filter(static fn(string $id) => is_a($id, $type, true))
             ->toList();
