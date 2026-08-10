@@ -148,23 +148,6 @@ yamllint:
 	@find .github/ -name \*.y*ml -print0 | xargs -r -n 1 -0 yamllint --no-warnings
 	@find . -maxdepth 1 -name \*.y*ml -print0 | xargs -r -n 1 -0 yamllint --no-warnings
 
-##############################################################
-# Quick development testing procedure                        #
-##############################################################
-
-PHP_VERSIONS=php8.2 php8.3 php8.4
-
-.PHONY: quick
-quick:
-	make --no-print-directory -j test-all
-
-.PHONY: test-all
-test-all: $(PHP_VERSIONS)
-
-.PHONY: $(PHP_VERSIONS)
-$(PHP_VERSIONS): cs
-	@if command -v $@; then make --no-print-directory PHP=$@ PHP_CS_FIXER=/bin/true phpunit; fi
-
 .PHONY: docs
 docs:
 	mkdocs serve
