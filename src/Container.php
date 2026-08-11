@@ -124,13 +124,6 @@ class Container implements ContainerInterface, IteratorAggregate
         return ContainerInterface::class === $this->implementations[ContainerInterface::class];
     }
 
-    /**
-     * A clone must give the clone for ContainerInterface, not the original.
-     *
-     * The constructor registers the container as its own cached value, under the
-     * self-referential marker that `get()` steps over. Either half missing means a user
-     * registration took the ID, and that registration stays as the user made it.
-     */
     public function __clone(): void
     {
         if (!$this->hasCachedSelf()) {
