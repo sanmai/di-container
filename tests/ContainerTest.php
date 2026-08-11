@@ -282,14 +282,14 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
     }
 
-    public static function provideIntefaces(): iterable
+    public static function provideInterfaces(): iterable
     {
         yield [NamedObjectInterface::class];
         yield [ContainerInterface::class];
         yield [IteratorAggregate::class];
     }
 
-    #[DataProvider('provideIntefaces')]
+    #[DataProvider('provideInterfaces')]
     public function testItThrowsOnSelfReferencingInterfaces(string $id): void
     {
         $container = new Container([
