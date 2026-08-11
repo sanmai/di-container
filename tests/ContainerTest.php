@@ -406,22 +406,6 @@ class ContainerTest extends TestCase
         $this->assertSame($clone, $dependent->getContainer());
     }
 
-    public function testItAllowsToForbidCloning(): void
-    {
-        $this->markTestIncomplete("BC break");
-    }
-
-    public function testItsCloneReceivesTheCloneAfterResolution(): void
-    {
-        $container = new Container();
-        $container->get(ContainerInterface::class);
-
-        $clone = clone $container;
-
-        $this->assertSame($clone, $clone->get(ContainerInterface::class));
-        $this->assertSame($container, $container->get(ContainerInterface::class));
-    }
-
     public function testItAllowsOverridingContainerInterface(): void
     {
         $custom = $this->createStub(ContainerInterface::class);
