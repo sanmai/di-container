@@ -133,6 +133,19 @@ $logger = new FileLogger('app.log');
 $container->inject(LoggerInterface::class, $logger);
 ```
 
+## Cloning
+
+A clone keeps the registrations and the resolved services of the original. It gives itself, not the original, for `ContainerInterface`:
+
+```php
+$clone = clone $container;
+
+$clone->get(ContainerInterface::class);   // the clone
+$clone->get(ServiceNeedingContainer::class)->getContainer(); // also the clone
+```
+
+A service that the container resolved before the cloning stays resolved, and the clone reuses the same object. This includes a `ContainerInterface` that you registered yourself: the clone keeps your instance and does not make it again.
+
 ## Removing Services
 
 Use `remove()` to forget a service together with any instances.

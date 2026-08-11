@@ -96,9 +96,8 @@ class Container implements ContainerInterface, IteratorAggregate
      */
     public function __construct(iterable $values = [], iterable $bindings = [])
     {
-        // Cache the value letting a builder override it
-        $this->values[ContainerInterface::class] = $this;
-        $this->implementations[ContainerInterface::class] = ContainerInterface::class;
+        // Resolve the container on demand while letting the user override it
+        $this->factories[ContainerInterface::class] = static fn(self $container): self => $container;
 
         $this->missing = new class {};
 
@@ -184,6 +183,8 @@ class Container implements ContainerInterface, IteratorAggregate
     /**
      * Stores a value, validating type for class-string IDs only.
      *
+     * The container never caches itself: a clone must provide the clone.
+     *
      * @template T of object
      *
      * @param class-string<T> $id accepts any string; non-class IDs skip validation
@@ -193,7 +194,9 @@ class Container implements ContainerInterface, IteratorAggregate
     {
         self::assertType($id, $value);
 
-        $this->values[$id] = $value;
+        if ($this !== $value) {
+            $this->values[$id] = $value;
+        }
 
         /** @var T */
         return $value;

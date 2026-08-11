@@ -41,7 +41,6 @@ namespace Tests\DIContainer;
 use DIContainer\Container;
 use DIContainer\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\ExpectationFailedException;
 use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -380,11 +379,18 @@ class ContainerTest extends TestCase
 
         $dependent = $clone->get(ContainerDependent::class);
 
-        try {
-            $this->assertSame($clone, $dependent->getContainer());
-        } catch (ExpectationFailedException $e) {
-            $this->markTestSkipped("bug: cloned containers must provide clones ({$e->getMessage()})");
-        }
+        $this->assertSame($clone, $dependent->getContainer());
+    }
+
+    public function testItsCloneReceivesTheCloneAfterResolution(): void
+    {
+        $container = new Container();
+        $container->get(ContainerInterface::class);
+
+        $clone = clone $container;
+
+        $this->assertSame($clone, $clone->get(ContainerInterface::class));
+        $this->assertSame($container, $container->get(ContainerInterface::class));
     }
 
     public function testItAllowsToForbidCloning(): void
@@ -667,10 +673,11 @@ class ContainerTest extends TestCase
         $this->assertSame(42, $container->get(BuiltinDefaultDependent::class)->getId());
 
         $expectedServices = [
+            // The container registers its own factory first
+            ContainerInterface::class,
             SimpleObject::class,
             'app.locator',
             NamedObjectInterface::class,
-            ContainerInterface::class,
             VariadicConstructor::class,
             SomeAbstractObject::class,
             CallableBuilder::class,
