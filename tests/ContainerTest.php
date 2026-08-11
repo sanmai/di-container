@@ -405,6 +405,10 @@ class ContainerTest extends TestCase
 
         $this->assertSame($custom, $container->get(ContainerInterface::class));
 
+        $clone = clone $container;
+
+        $this->assertSame($custom, $clone->get(ContainerInterface::class));
+
         $container->remove(ContainerInterface::class);
         $this->assertFalse($container->has(ContainerInterface::class));
     }
