@@ -53,6 +53,7 @@ use Tests\DIContainer\Fixtures\CompositeDefaultDependent;
 use Tests\DIContainer\Fixtures\ContainerDependent;
 use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
+use Tests\DIContainer\Fixtures\Factory;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
 use Tests\DIContainer\Fixtures\NameProvider;
@@ -399,8 +400,14 @@ class ContainerTest extends TestCase
     {
         $custom = $this->createStub(ContainerInterface::class);
 
+        $factory = $this->createMock(Factory::class);
+        $factory->expects($this->once())
+            ->method('__invoke')
+            ->willReturn($custom)
+        ;
+
         $container = new Container([
-            ContainerInterface::class => static fn() => $custom,
+            ContainerInterface::class => $factory,
         ]);
 
         $this->assertSame($custom, $container->get(ContainerInterface::class));
