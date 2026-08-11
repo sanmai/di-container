@@ -49,6 +49,7 @@ use Tests\DIContainer\Fixtures\ComplexDepender;
 use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
 use Tests\DIContainer\Fixtures\CompositeDefaultDependent;
+use Tests\DIContainer\Fixtures\ContainerDependent;
 use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
@@ -365,6 +366,23 @@ class ContainerTest extends TestCase
         $container = new Container();
 
         $this->assertSame($container, $container->get(ContainerInterface::class));
+    }
+
+    public function testAServiceAddedToACloneReceivesTheCloneAsItsContainer(): void
+    {
+        $container = new Container();
+        $clone = clone $container;
+
+        $clone->set(
+            ContainerDependent::class,
+            static fn(Container $container) => new ContainerDependent(
+                $container->get(ContainerInterface::class),
+            ),
+        );
+
+        $dependent = $clone->get(ContainerDependent::class);
+
+        $this->assertSame($clone, $dependent->getContainer());
     }
 
     public function testItAllowsToForbidCloning(): void
