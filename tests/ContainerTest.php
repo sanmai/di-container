@@ -382,7 +382,7 @@ class ContainerTest extends TestCase
         try {
             $this->assertSame($clone, $dependent->getContainer());
         } catch (ExpectationFailedException $e) {
-            $this->markTestSkipped($e->getMessage());
+            $this->markTestSkipped("Regression: cloned containers must provide clones ({$e->getMessage()})");
         }
     }
 
