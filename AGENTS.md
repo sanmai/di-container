@@ -81,7 +81,8 @@ To get stable and meaningful results, run the variants in turn (A/B/A/B), attach
 ## Conventions
 
 - Expose only the details that you cannot hide.
-- Put the data providers above the tests that use them.
+- A construct that appears nowhere in the file (such as `??`) is absent on purpose.
+- Put the data providers above the tests that use them, like you put the test name above the test body.
 - Keep the fixtures in `tests/Fixtures/`. Use an existing fixture before you make a new one.
 - Each PHP file starts with the BSD header from `LICENSE`. Do not write the header manually: `make cs` adds it.
 - `make cs` also applies Yoda conditions, strict comparisons, and `use function` imports for the global functions.
