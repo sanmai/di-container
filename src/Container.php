@@ -114,9 +114,9 @@ class Container implements ContainerInterface, IteratorAggregate
     /**
      * A clone must give the clone for ContainerInterface, not the original.
      *
-     * The implicit self-registration is the marker in `implementations` that points at
-     * the interface itself, together with the cached container. A user registration
-     * removes both, and thus its own value stays as it is.
+     * The constructor registers the container as its own cached value, under the
+     * self-referential marker that `get()` steps over. Either half missing means a user
+     * registration took the ID, and that registration stays as the user made it.
      */
     public function __clone(): void
     {
@@ -124,7 +124,8 @@ class Container implements ContainerInterface, IteratorAggregate
             return;
         }
 
-        if (ContainerInterface::class !== ($this->implementations[ContainerInterface::class] ?? null)) {
+        if (!array_key_exists(ContainerInterface::class, $this->implementations)
+            || ContainerInterface::class !== $this->implementations[ContainerInterface::class]) {
             return;
         }
 

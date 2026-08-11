@@ -162,6 +162,18 @@ $clone = clone $container;
 $clone->get(ContainerInterface::class);   // $provided
 ```
 
+The container declares `__clone()`. A subclass thus cannot make `__clone()` private to forbid cloning. Override it and throw instead:
+
+```php
+class UncloneableContainer extends Container
+{
+    public function __clone(): void
+    {
+        throw new LogicException('This container does not support cloning');
+    }
+}
+```
+
 ## Removing Services
 
 Use `remove()` to forget a service together with any instances.
