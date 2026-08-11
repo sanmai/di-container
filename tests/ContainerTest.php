@@ -380,6 +380,9 @@ class ContainerTest extends TestCase
         $clone = clone $container;
 
         $this->assertSame($custom, $clone->get(ContainerInterface::class));
+
+        $container->remove(ContainerInterface::class);
+        $this->assertFalse($container->has(ContainerInterface::class));
     }
 
     public function testItContainerBindingsIndependent(): void
@@ -631,5 +634,14 @@ class ContainerTest extends TestCase
         take($expectedServices)->each($container->remove(...));
 
         $this->assertSame([], take($container)->toList());
+    }
+
+    public function testItRemovesSelfReference(): void
+    {
+        $container = new Container();
+        $container->remove(ContainerInterface::class);
+
+        $this->expectException(Exception::class);
+        $container->get(ContainerInterface::class);
     }
 }
