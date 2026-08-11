@@ -40,6 +40,7 @@ namespace Tests\DIContainer;
 
 use DIContainer\Container;
 use DIContainer\Exception;
+use IteratorAggregate;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -281,16 +282,24 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
     }
 
-    public function testItThrowsOnSelfReferencingInterfaces(): void
+    public static function provideIntefaces(): iterable
+    {
+        yield [NamedObjectInterface::class];
+        yield [ContainerInterface::class];
+        yield [IteratorAggregate::class];
+    }
+
+    #[DataProvider('provideIntefaces')]
+    public function testItThrowsOnSelfReferencingInterfaces(string $id): void
     {
         $container = new Container([
-            NamedObjectInterface::class => NamedObjectInterface::class,
+            $id => $id,
         ]);
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Unknown service');
 
-        $container->get(NamedObjectInterface::class);
+        $container->get($id);
     }
 
     public function testItHas(): void
@@ -396,20 +405,6 @@ class ContainerTest extends TestCase
 
         $this->assertSame($clone, $clone->get(ContainerInterface::class));
         $this->assertSame($container, $container->get(ContainerInterface::class));
-    }
-
-    public function testItsCloneKeepsThrowingOnSelfReferencingInterface(): void
-    {
-        $container = new Container([
-            ContainerInterface::class => ContainerInterface::class,
-        ]);
-
-        $clone = clone $container;
-
-        $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Unknown service');
-
-        $clone->get(ContainerInterface::class);
     }
 
     public function testItAllowsOverridingContainerInterface(): void
