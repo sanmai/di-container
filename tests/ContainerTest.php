@@ -407,6 +407,11 @@ class ContainerTest extends TestCase
         $clone->get(ContainerInterface::class);
     }
 
+    public function testItAllowsToForbidCloning(): void
+    {
+        $this->markTestIncomplete("BC break");
+    }
+
     public function testItAllowsOverridingContainerInterface(): void
     {
         $custom = $this->createStub(ContainerInterface::class);
