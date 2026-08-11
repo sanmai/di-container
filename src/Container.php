@@ -111,17 +111,22 @@ class Container implements ContainerInterface, IteratorAggregate
         }
     }
 
+    /**
+     * Validates that a cached $this set in the constructor still a thing.
+     * If the implementation has an impossible mapping interface to interface,
+     * and the cache has an entry, it can only be one thing that we set ourselves.
+     */
     private function hasCachedSelf(): bool
     {
-        if (!array_key_exists(ContainerInterface::class, $this->values)) {
-            return false;
-        }
-
         if (!array_key_exists(ContainerInterface::class, $this->implementations)) {
             return false;
         }
 
-        return ContainerInterface::class === $this->implementations[ContainerInterface::class];
+        if (ContainerInterface::class !== $this->implementations[ContainerInterface::class]) {
+            return false;
+        }
+
+        return array_key_exists(ContainerInterface::class, $this->values);
     }
 
     public function __clone(): void
