@@ -367,6 +367,15 @@ class ContainerTest extends TestCase
         $this->assertSame($container, $container->get(ContainerInterface::class));
     }
 
+    public function testItAllowsToForbidCloning(): void
+    {
+        $container = new class extends Container {
+            private function __clone(): void {}
+        };
+
+        $this->assertInstanceOf(Container::class, $container);
+    }
+
     public function testItAllowsOverridingContainerInterface(): void
     {
         $custom = $this->createStub(ContainerInterface::class);
