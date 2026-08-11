@@ -98,6 +98,7 @@ class Container implements ContainerInterface, IteratorAggregate
     {
         // Cache the value letting a builder override it
         $this->values[ContainerInterface::class] = $this;
+        $this->implementations[ContainerInterface::class] = ContainerInterface::class;
 
         $this->missing = new class {};
 

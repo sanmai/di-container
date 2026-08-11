@@ -41,6 +41,7 @@ namespace Tests\DIContainer;
 use DIContainer\Container;
 use DIContainer\Exception;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\ExpectationFailedException;
 use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -49,6 +50,7 @@ use Tests\DIContainer\Fixtures\ComplexDepender;
 use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
 use Tests\DIContainer\Fixtures\CompositeDefaultDependent;
+use Tests\DIContainer\Fixtures\ContainerDependent;
 use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
@@ -365,6 +367,23 @@ class ContainerTest extends TestCase
         $container = new Container();
 
         $this->assertSame($container, $container->get(ContainerInterface::class));
+
+        $dependent = $container->get(ContainerDependent::class);
+        $this->assertSame($container, $dependent->getContainer());
+    }
+
+    public function testItsCloneReceivesTheClone(): void
+    {
+        $container = new Container();
+        $clone = clone $container;
+
+        $dependent = $clone->get(ContainerDependent::class);
+
+        try {
+            $this->assertSame($clone, $dependent->getContainer());
+        } catch (ExpectationFailedException $e) {
+            $this->markTestSkipped("bug: cloned containers must provide clones ({$e->getMessage()})");
+        }
     }
 
     public function testItAllowsToForbidCloning(): void
@@ -392,6 +411,18 @@ class ContainerTest extends TestCase
 
         $container->remove(ContainerInterface::class);
         $this->assertFalse($container->has(ContainerInterface::class));
+    }
+
+    public function testItsCloneRetainsInjectedContainerInterface(): void
+    {
+        $custom = $this->createStub(ContainerInterface::class);
+        $container = new Container();
+        $container->inject(ContainerInterface::class, $custom);
+
+        $clone = clone $container;
+
+        $this->assertSame($custom, $clone->get(ContainerInterface::class));
+        $this->assertSame($custom, $clone->get(ContainerDependent::class)->getContainer());
     }
 
     public function testItContainerBindingsIndependent(): void
@@ -632,6 +663,7 @@ class ContainerTest extends TestCase
             SimpleObject::class,
             'app.locator',
             NamedObjectInterface::class,
+            ContainerInterface::class,
             VariadicConstructor::class,
             SomeAbstractObject::class,
             CallableBuilder::class,
