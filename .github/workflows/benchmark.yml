@@ -2,12 +2,14 @@
 name: Benchmark
 
 concurrency:
-  group: benchmark-${{ github.head_ref || github.run_id }}
+  group: benchmark-${{ github.ref }}
   cancel-in-progress: true
 
 on:
   pull_request:
     paths:
+      # Only the code under measurement, and the harness that measures it.
+      # Tests and fixtures never run under PHPBench.
       - 'src/**.php'
       - 'benchmarks/**'
       - '.github/workflows/benchmark.yml'
