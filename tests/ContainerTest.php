@@ -382,6 +382,11 @@ class ContainerTest extends TestCase
         $this->assertSame($clone, $dependent->getContainer());
     }
 
+    public function testItAllowsToForbidCloning(): void
+    {
+        $this->markTestIncomplete("BC break");
+    }
+
     public function testItsCloneReceivesTheCloneAfterResolution(): void
     {
         $container = new Container();
@@ -405,11 +410,6 @@ class ContainerTest extends TestCase
         $this->expectExceptionMessage('Unknown service');
 
         $clone->get(ContainerInterface::class);
-    }
-
-    public function testItAllowsToForbidCloning(): void
-    {
-        $this->markTestIncomplete("BC break");
     }
 
     public function testItAllowsOverridingContainerInterface(): void
@@ -446,6 +446,19 @@ class ContainerTest extends TestCase
 
         $this->assertSame($custom, $clone->get(ContainerInterface::class));
         $this->assertSame($custom, $clone->get(ContainerDependent::class)->getContainer());
+    }
+
+    public function testItsCloneRetainsContainerInterfaceImplementation(): void
+    {
+        $container = new Container([
+            ContainerInterface::class => ExtendedContainer::class,
+        ]);
+
+        $resolved = $container->get(ContainerInterface::class);
+
+        $clone = clone $container;
+
+        $this->assertSame($resolved, $clone->get(ContainerInterface::class));
     }
 
     public function testItContainerBindingsIndependent(): void
