@@ -40,6 +40,7 @@ namespace Tests\DIContainer;
 
 use DIContainer\Container;
 use DIContainer\Exception;
+use IteratorAggregate;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -49,8 +50,10 @@ use Tests\DIContainer\Fixtures\ComplexDepender;
 use Tests\DIContainer\Fixtures\ComplexObject;
 use Tests\DIContainer\Fixtures\ComplexObjectBuilder;
 use Tests\DIContainer\Fixtures\CompositeDefaultDependent;
+use Tests\DIContainer\Fixtures\ContainerDependent;
 use Tests\DIContainer\Fixtures\DependentObject;
 use Tests\DIContainer\Fixtures\ExtendedContainer;
+use Tests\DIContainer\Fixtures\Factory;
 use Tests\DIContainer\Fixtures\NamedObjectInterface;
 use Tests\DIContainer\Fixtures\NameNeeder;
 use Tests\DIContainer\Fixtures\NameProvider;
@@ -65,6 +68,9 @@ use Tests\DIContainer\Fixtures\TypedVariadicConstructor;
 use Tests\DIContainer\Fixtures\VariadicConstructor;
 use Closure;
 use SplFileInfo;
+
+use function iterator_to_array;
+use function Pipeline\take;
 
 #[CoversClass(Container::class)]
 class ContainerTest extends TestCase
@@ -276,16 +282,39 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(SimpleObject::class, $container->get(SimpleObject::class));
     }
 
-    public function testItThrowsOnSelfReferencingInterfaces(): void
+    public static function provideInterfaces(): iterable
+    {
+        yield [NamedObjectInterface::class];
+        yield [ContainerInterface::class];
+        yield [IteratorAggregate::class];
+    }
+
+    #[DataProvider('provideInterfaces')]
+    public function testItThrowsOnSelfReferencingInterfaces(string $id): void
     {
         $container = new Container([
-            NamedObjectInterface::class => NamedObjectInterface::class,
+            $id => $id,
         ]);
 
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Unknown service');
 
-        $container->get(NamedObjectInterface::class);
+        $container->get($id);
+    }
+
+    #[DataProvider('provideInterfaces')]
+    public function testItsCloneThrowsOnSelfReferencingInterfaces(string $id): void
+    {
+        $container = new Container([
+            $id => $id,
+        ]);
+
+        $container = clone $container;
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get($id);
     }
 
     public function testItRejectsCircularImplementationMappings(): void
@@ -385,17 +414,68 @@ class ContainerTest extends TestCase
         $container = new Container();
 
         $this->assertSame($container, $container->get(ContainerInterface::class));
+
+        $dependent = $container->get(ContainerDependent::class);
+        $this->assertSame($container, $dependent->getContainer());
+    }
+
+    public function testItsCloneReceivesTheClone(): void
+    {
+        $container = new Container();
+        $clone = clone $container;
+
+        $dependent = $clone->get(ContainerDependent::class);
+
+        $this->assertSame($clone, $dependent->getContainer());
     }
 
     public function testItAllowsOverridingContainerInterface(): void
     {
-        $custom = new Container();
+        $custom = $this->createStub(ContainerInterface::class);
+
+        $factory = $this->createMock(Factory::class);
+        $factory->expects($this->once())
+            ->method('__invoke')
+            ->willReturn($custom)
+        ;
 
         $container = new Container([
-            ContainerInterface::class => static fn() => $custom,
+            ContainerInterface::class => $factory,
         ]);
 
         $this->assertSame($custom, $container->get(ContainerInterface::class));
+
+        $clone = clone $container;
+
+        $this->assertSame($custom, $clone->get(ContainerInterface::class));
+
+        $container->remove(ContainerInterface::class);
+        $this->assertFalse($container->has(ContainerInterface::class));
+    }
+
+    public function testItsCloneRetainsInjectedContainerInterface(): void
+    {
+        $custom = $this->createStub(ContainerInterface::class);
+        $container = new Container();
+        $container->inject(ContainerInterface::class, $custom);
+
+        $clone = clone $container;
+
+        $this->assertSame($custom, $clone->get(ContainerInterface::class));
+        $this->assertSame($custom, $clone->get(ContainerDependent::class)->getContainer());
+    }
+
+    public function testItsCloneRetainsContainerInterfaceImplementation(): void
+    {
+        $container = new Container([
+            ContainerInterface::class => ExtendedContainer::class,
+        ]);
+
+        $resolved = $container->get(ContainerInterface::class);
+
+        $clone = clone $container;
+
+        $this->assertSame($resolved, $clone->get(ContainerInterface::class));
     }
 
     public function testItContainerBindingsIndependent(): void
@@ -484,6 +564,27 @@ class ContainerTest extends TestCase
         $this->expectExceptionMessageMatches('/Expected instance of .*DependentObject, got .*SimpleObject/');
 
         $container->inject(DependentObject::class, new SimpleObject());
+    }
+
+    public function testInjectKeepsPriorRegistration(): void
+    {
+        $canary = new SimpleObject();
+
+        $container = new Container([
+            SimpleObject::class => static fn() => $canary,
+        ]);
+
+        $this->assertSame($canary, $container->get(SimpleObject::class));
+
+        try {
+            $container->inject(SimpleObject::class, new NameProvider());
+            $this->fail('Expected a type mismatch exception');
+        } catch (Exception $exception) {
+            $this->assertStringContainsString('Expected instance of', $exception->getMessage());
+        }
+
+        $this->assertTrue($container->has(SimpleObject::class));
+        $this->assertSame($canary, $container->get(SimpleObject::class));
     }
 
     public function testInjectOverridesBind(): void
@@ -594,5 +695,47 @@ class ContainerTest extends TestCase
 
         $this->assertSame(42, $object->getId());
         $this->assertSame($injected, $object->getNamed());
+    }
+
+    public function testItRemoves(): void
+    {
+        $container = new Container([
+            SimpleObject::class => static fn() => new SimpleObject(),
+            NamedObjectInterface::class => ComplexObjectBuilder::class,
+            VariadicConstructor::class => VariadicConstructor::class,
+            SomeAbstractObject::class => NameProvider::class,
+        ], [
+            'app.locator' => static fn() => new SimpleObject(),
+        ]);
+
+        $container->inject(CallableBuilder::class, new CallableBuilder());
+
+        $this->assertSame(42, $container->get(BuiltinDefaultDependent::class)->getId());
+
+        $expectedServices = [
+            SimpleObject::class,
+            'app.locator',
+            NamedObjectInterface::class,
+            ContainerInterface::class,
+            VariadicConstructor::class,
+            SomeAbstractObject::class,
+            CallableBuilder::class,
+        ];
+
+        $this->assertSame($expectedServices, take($container)->toList());
+        $this->assertSame($expectedServices, iterator_to_array($container), "Duplicate keys found");
+
+        take($expectedServices)->each($container->remove(...));
+
+        $this->assertSame([], take($container)->toList());
+    }
+
+    public function testItRemovesSelfReference(): void
+    {
+        $container = new Container();
+        $container->remove(ContainerInterface::class);
+
+        $this->expectException(Exception::class);
+        $container->get(ContainerInterface::class);
     }
 }
