@@ -317,6 +317,29 @@ class ContainerTest extends TestCase
         $container->get($id);
     }
 
+    public function testItRejectsCircularImplementationMappings(): void
+    {
+        $container = new Container();
+        $container->bind(SimpleObject::class, NameProvider::class);
+        $container->bind(NameProvider::class, DependentObject::class);
+        $container->bind(NamedObjectInterface::class, SimpleObject::class);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Circular implementation mapping');
+
+        $container->bind(DependentObject::class, SimpleObject::class);
+    }
+
+    public function testItAcceptsMappingsToSelfMappedConcreteClasses(): void
+    {
+        $container = new Container([
+            SimpleObject::class => SimpleObject::class,
+        ]);
+        $container->bind('app.simple', SimpleObject::class);
+
+        $this->assertInstanceOf(SimpleObject::class, $container->get('app.simple'));
+    }
+
     public function testItHas(): void
     {
         $container = new Container([

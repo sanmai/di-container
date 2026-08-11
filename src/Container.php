@@ -174,7 +174,26 @@ class Container implements ContainerInterface, IteratorAggregate
             return;
         }
 
+        $this->assertNoImplementationCycle($id, $value);
         $this->implementations[$id] = $value;
+    }
+
+    private function assertNoImplementationCycle(string $id, string $implementation): void
+    {
+        while (array_key_exists($implementation, $this->implementations)) {
+            $nextImplementation = $this->implementations[$implementation];
+
+            // Existing self-maps terminate the implementation chain.
+            if ($nextImplementation === $implementation) {
+                return;
+            }
+
+            if ($nextImplementation === $id) {
+                throw new Exception(sprintf('Circular implementation mapping involving "%s"', $id));
+            }
+
+            $implementation = $nextImplementation;
+        }
     }
 
     /**
