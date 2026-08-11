@@ -8,10 +8,12 @@ concurrency:
 on:
   pull_request:
     paths:
-      - '**.php'
+      - 'src/**.php'
+      - 'benchmarks/**'
       - '.github/workflows/benchmark.yml'
       - 'phpbench.json'
       - 'composer.json'
+      - 'Makefile'
 
 permissions:
   pull-requests: write
