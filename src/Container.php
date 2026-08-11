@@ -96,8 +96,9 @@ class Container implements ContainerInterface, IteratorAggregate
      */
     public function __construct(iterable $values = [], iterable $bindings = [])
     {
-        // Resolve the container on demand while letting the user override it
-        $this->factories[ContainerInterface::class] = static fn(self $container): self => $container;
+        // Cache the value letting a builder override it
+        $this->values[ContainerInterface::class] = $this;
+        $this->implementations[ContainerInterface::class] = ContainerInterface::class;
 
         $this->missing = new class {};
 
@@ -108,6 +109,26 @@ class Container implements ContainerInterface, IteratorAggregate
         foreach ($bindings as $id => $binding) {
             $this->bind($id, $binding);
         }
+    }
+
+    /**
+     * A clone must give the clone for ContainerInterface, not the original.
+     *
+     * The implicit self-registration is the marker in `implementations` that points at
+     * the interface itself, together with the cached container. A user registration
+     * removes both, and thus its own value stays as it is.
+     */
+    public function __clone(): void
+    {
+        if (!array_key_exists(ContainerInterface::class, $this->values)) {
+            return;
+        }
+
+        if (ContainerInterface::class !== ($this->implementations[ContainerInterface::class] ?? null)) {
+            return;
+        }
+
+        $this->values[ContainerInterface::class] = $this;
     }
 
     /**
@@ -183,8 +204,6 @@ class Container implements ContainerInterface, IteratorAggregate
     /**
      * Stores a value, validating type for class-string IDs only.
      *
-     * The container never caches itself: a clone must provide the clone.
-     *
      * @template T of object
      *
      * @param class-string<T> $id accepts any string; non-class IDs skip validation
@@ -194,9 +213,7 @@ class Container implements ContainerInterface, IteratorAggregate
     {
         self::assertType($id, $value);
 
-        if ($this !== $value) {
-            $this->values[$id] = $value;
-        }
+        $this->values[$id] = $value;
 
         /** @var T */
         return $value;

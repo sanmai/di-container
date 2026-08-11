@@ -393,13 +393,18 @@ class ContainerTest extends TestCase
         $this->assertSame($container, $container->get(ContainerInterface::class));
     }
 
-    public function testItAllowsToForbidCloning(): void
+    public function testItsCloneKeepsThrowingOnSelfReferencingInterface(): void
     {
-        $container = new class extends Container {
-            private function __clone(): void {}
-        };
+        $container = new Container([
+            ContainerInterface::class => ContainerInterface::class,
+        ]);
 
-        $this->assertInstanceOf(Container::class, $container);
+        $clone = clone $container;
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $clone->get(ContainerInterface::class);
     }
 
     public function testItAllowsOverridingContainerInterface(): void
@@ -673,11 +678,10 @@ class ContainerTest extends TestCase
         $this->assertSame(42, $container->get(BuiltinDefaultDependent::class)->getId());
 
         $expectedServices = [
-            // The container registers its own factory first
-            ContainerInterface::class,
             SimpleObject::class,
             'app.locator',
             NamedObjectInterface::class,
+            ContainerInterface::class,
             VariadicConstructor::class,
             SomeAbstractObject::class,
             CallableBuilder::class,
