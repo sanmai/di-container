@@ -133,47 +133,6 @@ $logger = new FileLogger('app.log');
 $container->inject(LoggerInterface::class, $logger);
 ```
 
-## Cloning
-
-A clone keeps the registrations and the resolved services of the original. It gives itself, not the original, for `ContainerInterface`:
-
-```php
-$clone = clone $container;
-
-$clone->get(ContainerInterface::class);   // the clone
-$clone->get(ServiceNeedingContainer::class)->getContainer(); // also the clone
-```
-
-The clone resolves the container anew. It reuses every other service that the original resolved before the cloning, and such a service keeps the container that made it:
-
-```php
-$container->get(ServiceNeedingContainer::class);   // resolved before the cloning
-$clone = clone $container;
-
-$clone->get(ServiceNeedingContainer::class)->getContainer(); // the original
-```
-
-A `ContainerInterface` that you registered yourself is a resolved service too. The clone keeps your instance and does not make it again:
-
-```php
-$container->inject(ContainerInterface::class, $provided);
-$clone = clone $container;
-
-$clone->get(ContainerInterface::class);   // $provided
-```
-
-The container declares `__clone()`. A subclass thus cannot make `__clone()` private to forbid cloning. Override it and throw instead:
-
-```php
-class UncloneableContainer extends Container
-{
-    public function __clone(): void
-    {
-        throw new LogicException('This container does not support cloning');
-    }
-}
-```
-
 ## Removing Services
 
 Use `remove()` to forget a service together with any instances.
