@@ -42,7 +42,6 @@ use DIContainer\Container;
 use DIContainer\Exception;
 use IteratorAggregate;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\ExpectationFailedException;
 use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -404,20 +403,7 @@ class ContainerTest extends TestCase
 
         $dependent = $clone->get(ContainerDependent::class);
 
-        try {
-            $this->assertSame($clone, $dependent->getContainer());
-        } catch (ExpectationFailedException $e) {
-            $this->markTestSkipped("bug: cloned containers must provide clones ({$e->getMessage()})");
-        }
-    }
-
-    public function testItAllowsToForbidCloning(): void
-    {
-        $container = new class extends Container {
-            private function __clone(): void {}
-        };
-
-        $this->assertInstanceOf(Container::class, $container);
+        $this->assertSame($clone, $dependent->getContainer());
     }
 
     public function testItAllowsOverridingContainerInterface(): void

@@ -168,7 +168,6 @@ class ContainerBench
 
     /**
      * Benchmark: Re-fetch the container itself through ContainerInterface.
-     * Measures: The cached self-reference that __clone() re-points.
      */
     #[Warmup(1)]
     #[Revs(1000)]

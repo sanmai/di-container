@@ -48,6 +48,7 @@ The container retains its state in internal arrays. The unit tests cover these r
 - **`get()` examines `implementations[$id] !== $id`.** Without this examination, `get()` calls itself forever when you register a class as its own implementation.
 - **Iteration hides its implementation.** `getIterator()` returns `Traversable`, not `Generator`. The class declares `IteratorAggregate<array-key, class-string<object>|non-empty-string>`, not `IteratorAggregate<int, ...>`. Both types promise the caller one thing only: a `foreach` loop gives the service IDs. Thus you can change the keys and the iterator class later.
 - **`has()` is pessimistic.** It reports the registrations and the cached values. It returns `false` for a class that the container can autowire, because it does not try.
+- **`__clone()` updates the cached self-reference.** This makes cloned containers independent: `clone $container; $clone->get(ContainerInterface::class)` returns the clone, not the original, unless it was specifically overridden by the user.
 
 ## Limits by Design
 
@@ -80,7 +81,8 @@ To get stable and meaningful results, run the variants in turn (A/B/A/B), attach
 ## Conventions
 
 - Expose only the details that you cannot hide.
-- Put the data providers above the tests that use them.
+- A construct that appears nowhere in the file (such as `??`) is absent on purpose.
+- Put the data providers above the tests that use them, like you put the test name above the test body.
 - Keep the fixtures in `tests/Fixtures/`. Use an existing fixture before you make a new one.
 - Each PHP file starts with the BSD header from `LICENSE`. Do not write the header manually: `make cs` adds it.
 - `make cs` also applies Yoda conditions, strict comparisons, and `use function` imports for the global functions.
