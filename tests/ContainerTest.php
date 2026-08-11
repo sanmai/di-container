@@ -302,6 +302,21 @@ class ContainerTest extends TestCase
         $container->get($id);
     }
 
+    #[DataProvider('provideInterfaces')]
+    public function testItsCloneThrowsOnSelfReferencingInterfaces(string $id): void
+    {
+        $container = new Container([
+            $id => $id,
+        ]);
+
+        $container = clone $container;
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Unknown service');
+
+        $container->get($id);
+    }
+
     public function testItHas(): void
     {
         $container = new Container([
