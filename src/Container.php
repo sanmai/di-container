@@ -111,6 +111,19 @@ class Container implements ContainerInterface, IteratorAggregate
         }
     }
 
+    private function hasCachedSelf(): bool
+    {
+        if (!array_key_exists(ContainerInterface::class, $this->values)) {
+            return false;
+        }
+
+        if (!array_key_exists(ContainerInterface::class, $this->implementations)) {
+            return false;
+        }
+
+        return ContainerInterface::class === $this->implementations[ContainerInterface::class];
+    }
+
     /**
      * A clone must give the clone for ContainerInterface, not the original.
      *
@@ -120,12 +133,7 @@ class Container implements ContainerInterface, IteratorAggregate
      */
     public function __clone(): void
     {
-        if (!array_key_exists(ContainerInterface::class, $this->values)) {
-            return;
-        }
-
-        if (!array_key_exists(ContainerInterface::class, $this->implementations)
-            || ContainerInterface::class !== $this->implementations[ContainerInterface::class]) {
+        if (!$this->hasCachedSelf()) {
             return;
         }
 
