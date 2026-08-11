@@ -405,12 +405,20 @@ class ContainerTest extends TestCase
 
         $this->assertSame($custom, $container->get(ContainerInterface::class));
 
+        $container->remove(ContainerInterface::class);
+        $this->assertFalse($container->has(ContainerInterface::class));
+    }
+
+    public function testItsCloneRetainsInjectedContainerInterface(): void
+    {
+        $custom = $this->createStub(ContainerInterface::class);
+        $container = new Container();
+        $container->inject(ContainerInterface::class, $custom);
+
         $clone = clone $container;
 
         $this->assertSame($custom, $clone->get(ContainerInterface::class));
-
-        $container->remove(ContainerInterface::class);
-        $this->assertFalse($container->has(ContainerInterface::class));
+        $this->assertSame($custom, $clone->get(ContainerDependent::class)->getContainer());
     }
 
     public function testItContainerBindingsIndependent(): void
