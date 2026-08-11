@@ -369,7 +369,6 @@ class ContainerTest extends TestCase
 
     public function testASubclassCanForbidCloning(): void
     {
-        // Loads only while Container declares no __clone() of its own
         $container = new class extends Container {
             private function __clone(): void {}
         };
