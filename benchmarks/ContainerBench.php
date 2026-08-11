@@ -48,6 +48,7 @@ use PhpBench\Attributes\BeforeMethods;
 use PhpBench\Attributes\Iterations;
 use PhpBench\Attributes\Revs;
 use PhpBench\Attributes\Warmup;
+use Psr\Container\ContainerInterface;
 use ReflectionClass;
 
 /**
@@ -163,6 +164,22 @@ class ContainerBench
             FixtureA1::class => static fn(Container $c) => new FixtureA1(),
         ]);
         $container->get(FixtureA1::class);
+    }
+
+    /**
+     * Benchmark: Re-fetch the container itself through ContainerInterface.
+     * Measures: The cached self-reference that __clone() re-points.
+     */
+    #[Warmup(1)]
+    #[Revs(1000)]
+    #[Iterations(3)]
+    public function benchSelfResolution(): void
+    {
+        static $container = null;
+
+        $container ??= new Container();
+
+        $container->get(ContainerInterface::class);
     }
 
     /**
