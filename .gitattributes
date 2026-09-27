@@ -1,4 +1,5 @@
 /.*                   export-ignore
+/AGENTS.md            export-ignore
 /Makefile             export-ignore
 /*.dist               export-ignore
 /*.xml.*              export-ignore
