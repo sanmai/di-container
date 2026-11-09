@@ -313,16 +313,17 @@ class Container implements ContainerInterface, IteratorAggregate
         }
 
         // Named arguments let PHP evaluate the defaults of the omitted parameters
-        $arguments = take($constructor->getParameters())
+        $resolvedArguments = take($constructor->getParameters())
             ->map($this->parameterNameToValue(...))
             ->select($this->notOmitted(...))
             ->toAssoc();
 
-        if (in_array($this->missing, $arguments, true)) {
+        // Check if we identified all parameters for the service
+        if (in_array($this->missing, $resolvedArguments, true)) {
             return null;
         }
 
-        return $reflectionClass->newInstanceArgs($arguments);
+        return $reflectionClass->newInstanceArgs($resolvedArguments);
     }
 
     /** @return Generator<string, mixed> */
