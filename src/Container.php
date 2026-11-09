@@ -44,6 +44,7 @@ use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
 use Traversable;
+use Generator;
 
 use function array_key_exists;
 use function count;
@@ -313,7 +314,7 @@ class Container implements ContainerInterface, IteratorAggregate
 
         // Named arguments let PHP evaluate the defaults of the omitted parameters
         $arguments = take($constructor->getParameters())
-            ->map(fn(ReflectionParameter $parameter) => yield $parameter->getName() => $this->findParameterValue($parameter))
+            ->map($this->parameterNameToValue(...))
             ->select($this->notOmitted(...))
             ->toAssoc();
 
@@ -322,6 +323,12 @@ class Container implements ContainerInterface, IteratorAggregate
         }
 
         return $reflectionClass->newInstanceArgs($arguments);
+    }
+
+    /** @return Generator<string, mixed> */
+    private function parameterNameToValue(ReflectionParameter $parameter): Generator
+    {
+        yield $parameter->getName() => $this->findParameterValue($parameter);
     }
 
     private function notOmitted(mixed $value): bool
