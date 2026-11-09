@@ -43,6 +43,7 @@ class NewDefaultDependent
     public function __construct(
         private readonly ComplexObject $complex = new ComplexObject('specificName', new SimpleObject(), optionalId: 3),
         private readonly SimpleObject $simple = new SimpleObject(),
+        private readonly ?ComplexObject $nullable = new ComplexObject('custom', new SimpleObject()),
     ) {}
 
     public function getComplex(): ComplexObject
@@ -53,5 +54,10 @@ class NewDefaultDependent
     public function getSimple(): SimpleObject
     {
         return $this->simple;
+    }
+
+    public function getNullable(): ?ComplexObject
+    {
+        return $this->nullable;
     }
 }

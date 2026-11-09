@@ -694,6 +694,14 @@ class ContainerTest extends TestCase
         $this->assertSame($container->get(SimpleObject::class), $object->getObject());
     }
 
+    public function testItUsesNewDefaultValues(): void
+    {
+        $container = new Container();
+
+        $this->expectExceptionMessage('Unknown service');
+        $container->get(NewDefaultDependent::class);
+    }
+
     public function testItPrefersRegistrationsOverNewDefaultValues(): void
     {
         $complex = new ComplexObject('container configured name', new SimpleObject());
@@ -710,6 +718,7 @@ class ContainerTest extends TestCase
         $this->assertSame($complex, $object->getComplex());
         $this->assertSame('container configured name', $object->getComplex()->getName());
         $this->assertSame($simple, $object->getSimple());
+        $this->assertSame($complex, $object->getNullable());
     }
 
     public function testItRemoves(): void
