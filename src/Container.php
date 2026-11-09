@@ -92,7 +92,7 @@ class Container implements ContainerInterface, IteratorAggregate
     /** Placeholder marking an unresolved parameter */
     private readonly object $missing;
 
-    /** Placeholder marking a parameter for PHP to fill with its default value */
+    /** Placeholder marking a parameter for PHP to use its default value */
     private readonly object $omit;
 
     /**
