@@ -7,10 +7,6 @@ on:
   push:
     branches:
       - main
-      - v*.*
-  schedule:
-    # Run at noon JST (3:00 UTC) on the 15th of every month
-    - cron: '0 3 15 * *'
 
 jobs:
   tests:
@@ -24,6 +20,7 @@ jobs:
           - '8.3'
           - '8.4'
           - '8.5'
+          - '8.6'
           - 'latest'
         psr-container-version:
           - 'v2'
