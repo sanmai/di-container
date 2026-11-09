@@ -312,7 +312,6 @@ class Container implements ContainerInterface, IteratorAggregate
             return $reflectionClass->newInstance();
         }
 
-        // Named arguments let PHP evaluate the defaults of the omitted parameters
         $resolvedArguments = take($constructor->getParameters())
             ->map($this->parameterNameToValue(...))
             ->select($this->notOmitted(...))
@@ -326,7 +325,10 @@ class Container implements ContainerInterface, IteratorAggregate
         return $reflectionClass->newInstanceArgs($resolvedArguments);
     }
 
-    /** @return Generator<string, mixed> */
+    /**
+     * Named arguments enable PHP to evaluate the defaults of the omitted parameters.
+     * @return Generator<string, mixed>
+     */
     private function parameterNameToValue(ReflectionParameter $parameter): Generator
     {
         yield $parameter->getName() => $this->findParameterValue($parameter);
