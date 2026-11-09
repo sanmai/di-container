@@ -61,6 +61,7 @@ use Tests\DIContainer\Fixtures\NameProvidingContainer;
 use Tests\DIContainer\Fixtures\BuiltinDefaultDependent;
 use Tests\DIContainer\Fixtures\MissingTypeOptionalDependent;
 use Tests\DIContainer\Fixtures\NameNeederOptional;
+use Tests\DIContainer\Fixtures\NullableDefaultDependent;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
@@ -167,10 +168,19 @@ class ContainerTest extends TestCase
         $this->assertSame([], $object->getInputs());
     }
 
-    public function testItSkipsTypedVariadicParameters(): void
+    public static function provideVariadicContainers(): iterable
     {
-        $container = new Container();
+        yield 'autowired' => [new Container()];
 
+        $container = new Container();
+        $container->inject(SimpleObject::class, new SimpleObject());
+
+        yield 'registered' => [$container];
+    }
+
+    #[DataProvider('provideVariadicContainers')]
+    public function testItSkipsTypedVariadicParameters(Container $container): void
+    {
         $object = $container->get(TypedVariadicConstructor::class);
 
         $this->assertInstanceOf(TypedVariadicConstructor::class, $object);
@@ -672,6 +682,15 @@ class ContainerTest extends TestCase
 
         $this->assertSame(42, $object->getId());
         $this->assertSame($injected, $object->getNamed());
+    }
+
+    public function testItAutowiresNullableClassesWithNullDefault(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(NullableDefaultDependent::class);
+
+        $this->assertSame($container->get(SimpleObject::class), $object->getObject());
     }
 
     public function testItRemoves(): void
