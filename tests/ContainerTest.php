@@ -698,8 +698,32 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $this->expectExceptionMessage('Unknown service');
-        $container->get(NewDefaultDependent::class);
+        $object = $container->get(NewDefaultDependent::class);
+
+        $this->assertSame('specificName', $object->getComplex()->getName());
+        $this->assertSame(3, $object->getComplex()->getId());
+    }
+
+    public function testItDoesNotShareNewDefaultValues(): void
+    {
+        $container = new Container();
+
+        $simple = $container->get(SimpleObject::class);
+
+        $object = $container->get(NewDefaultDependent::class);
+
+        $this->assertNotSame($simple, $object->getSimple());
+
+        $this->assertNotSame($container->get(SimpleObject::class), $object->getSimple());
+    }
+
+    public function testItUsesNullableNewDefaultValues(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(NewDefaultDependent::class);
+
+        $this->assertSame('custom', $object->getNullable()?->getName());
     }
 
     public function testItPrefersRegistrationsOverNewDefaultValues(): void
@@ -715,7 +739,7 @@ class ContainerTest extends TestCase
 
         $object = $container->get(NewDefaultDependent::class);
 
-        $this->assertSame($complex, $object->getComplex());
+        $this->assertSame($complex, $object->getComplex(), 'a registration replaces the default');
         $this->assertSame('container configured name', $object->getComplex()->getName());
         $this->assertSame($simple, $object->getSimple());
         $this->assertSame($complex, $object->getNullable());

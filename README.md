@@ -133,6 +133,19 @@ $logger = new FileLogger('app.log');
 $container->inject(LoggerInterface::class, $logger);
 ```
 
+## Default Values
+
+When a constructor gives a `new` expression as a default value, each consumer that the container builds gets its own object from that expression, with the arguments from the signature:
+
+```php
+public function __construct(
+    private readonly SerializerInterface $serializer,
+    private readonly RetryPolicy $policy = new RetryPolicy('fast', retries: 3),
+) {}
+```
+
+The container does not share or cache this object. If you register `RetryPolicy`, the registration replaces the default value.
+
 ## Removing Services
 
 Use `remove()` to forget a service together with any instances.

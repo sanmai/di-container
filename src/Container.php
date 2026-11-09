@@ -377,6 +377,13 @@ class Container implements ContainerInterface, IteratorAggregate
 
         // Found an instantiable class, done
         if ((new ReflectionClass($paramTypeName))->isInstantiable()) {
+            $default = $this->objectDefault($parameter, $paramTypeName);
+
+            // Make sure the null-default parameters get autowired for BC reasons
+            if (null !== $default) {
+                return $default;
+            }
+
             return $this->get($paramTypeName);
         }
 
@@ -394,6 +401,23 @@ class Container implements ContainerInterface, IteratorAggregate
         }
 
         return $this->missing;
+    }
+
+    /**
+     * Returns the default value unless the type is registered.
+     */
+    private function objectDefault(ReflectionParameter $parameter, string $paramTypeName): ?object
+    {
+        if (!$parameter->isOptional()) {
+            return null;
+        }
+
+        if ($this->isRegistered($paramTypeName)) {
+            return null;
+        }
+
+        /** @var ?object */
+        return $parameter->getDefaultValue();
     }
 
     /**
@@ -419,6 +443,11 @@ class Container implements ContainerInterface, IteratorAggregate
             return true;
         }
 
+        return $this->isRegistered($id);
+    }
+
+    private function isRegistered(string $id): bool
+    {
         if (array_key_exists($id, $this->implementations)) {
             return true;
         }
