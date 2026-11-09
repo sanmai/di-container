@@ -61,6 +61,7 @@ use Tests\DIContainer\Fixtures\NameProvidingContainer;
 use Tests\DIContainer\Fixtures\BuiltinDefaultDependent;
 use Tests\DIContainer\Fixtures\MissingTypeOptionalDependent;
 use Tests\DIContainer\Fixtures\NameNeederOptional;
+use Tests\DIContainer\Fixtures\NewDefaultDependent;
 use Tests\DIContainer\Fixtures\NullableDefaultDependent;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
@@ -691,6 +692,23 @@ class ContainerTest extends TestCase
         $object = $container->get(NullableDefaultDependent::class);
 
         $this->assertSame($container->get(SimpleObject::class), $object->getObject());
+    }
+
+    public function testItPrefersRegistrationsOverNewDefaultValues(): void
+    {
+        $complex = new ComplexObject('container configured name', new SimpleObject());
+        $simple = new SimpleObject();
+
+        $container = new Container([
+            ComplexObject::class => static fn() => $complex,
+        ]);
+
+        $container->inject(SimpleObject::class, $simple);
+
+        $object = $container->get(NewDefaultDependent::class);
+
+        $this->assertSame($complex, $object->getComplex());
+        $this->assertSame($simple, $object->getSimple());
     }
 
     public function testItRemoves(): void
