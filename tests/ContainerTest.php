@@ -708,6 +708,7 @@ class ContainerTest extends TestCase
         $object = $container->get(NewDefaultDependent::class);
 
         $this->assertSame($complex, $object->getComplex());
+        $this->assertSame('container configured name', $object->getComplex()->getName());
         $this->assertSame($simple, $object->getSimple());
     }
 
