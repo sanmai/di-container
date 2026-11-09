@@ -44,6 +44,7 @@ use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
 use Traversable;
+use Generator;
 
 use function array_key_exists;
 use function count;
@@ -56,6 +57,7 @@ use function sprintf;
 use function str_contains;
 use function class_exists;
 use function interface_exists;
+use function in_array;
 
 /**
  * @implements IteratorAggregate<array-key, class-string<object>|non-empty-string>
@@ -90,6 +92,9 @@ class Container implements ContainerInterface, IteratorAggregate
     /** Placeholder marking an unresolved parameter */
     private readonly object $missing;
 
+    /** Placeholder marking a parameter for PHP to use its default value */
+    private readonly object $omit;
+
     /**
      * @param iterable<class-string<object>, callable|class-string<Builder<object>>|class-string<object>> $values
      * @param iterable<non-empty-string, callable|class-string<Builder<object>>|class-string<object>> $bindings For non-class service IDs
@@ -101,6 +106,7 @@ class Container implements ContainerInterface, IteratorAggregate
         $this->implementations[ContainerInterface::class] = ContainerInterface::class;
 
         $this->missing = new class {};
+        $this->omit = new class {};
 
         foreach ($values as $id => $value) {
             $this->set($id, $value);
@@ -326,41 +332,43 @@ class Container implements ContainerInterface, IteratorAggregate
         }
 
         $resolvedArguments = take($constructor->getParameters())
-            ->cast($this->findParameterValue(...))
-            ->select($this->notMissing(...))
-            ->toList();
-
-        $requiredNumberOfParameters = $constructor->getNumberOfParameters();
-
-        // Account for the variadic parameter (there can be only one, always optional)
-        if ($constructor->isVariadic()) {
-            $requiredNumberOfParameters -= 1;
-        }
+            ->map($this->parameterNameToValue(...))
+            ->select($this->notOmitted(...))
+            ->toAssoc();
 
         // Check if we identified all parameters for the service
-        if (count($resolvedArguments) !== $requiredNumberOfParameters) {
+        if (in_array($this->missing, $resolvedArguments, true)) {
             return null;
         }
 
         return $reflectionClass->newInstanceArgs($resolvedArguments);
     }
 
-    private function notMissing(mixed $value): bool
+    /**
+     * Named arguments enable PHP to evaluate the defaults of the omitted parameters.
+     * @return Generator<string, mixed>
+     */
+    private function parameterNameToValue(ReflectionParameter $parameter): Generator
     {
-        return $this->missing !== $value;
+        yield $parameter->getName() => $this->findParameterValue($parameter);
     }
 
-    private function resolveDefaultValue(ReflectionParameter $parameter): mixed
+    private function notOmitted(mixed $value): bool
     {
-        return match ($parameter->isDefaultValueAvailable()) {
-            true => $parameter->getDefaultValue(),
+        return $this->omit !== $value;
+    }
+
+    private function deferToDefault(ReflectionParameter $parameter): object
+    {
+        return match ($parameter->isOptional()) {
+            true => $this->omit,
             default => $this->missing,
         };
     }
 
     /**
      * Returns a possible argument value for the constructor; it can return a specific computed
-     * value just as well as a placeholder for the missing value.
+     * value just as well as a placeholder for an omitted or a missing value.
      *
      * @return mixed
      */
@@ -368,14 +376,14 @@ class Container implements ContainerInterface, IteratorAggregate
     {
         // Variadic parameters imply collections, which we do not provide, for now
         if ($parameter->isVariadic()) {
-            return $this->missing;
+            return $this->omit;
         }
 
         $paramType = $parameter->getType();
 
         // Not considering composite types, such as unions or intersections, for now
         if (!$paramType instanceof ReflectionNamedType) {
-            return $this->resolveDefaultValue($parameter);
+            return $this->deferToDefault($parameter);
         }
 
         /** @var class-string $paramTypeName */
@@ -383,11 +391,18 @@ class Container implements ContainerInterface, IteratorAggregate
 
         // Defer to a default value for built-in types and classes that cannot be reflected
         if (!class_exists($paramTypeName) && !interface_exists($paramTypeName)) {
-            return $this->resolveDefaultValue($parameter);
+            return $this->deferToDefault($parameter);
         }
 
         // Found an instantiable class, done
         if ((new ReflectionClass($paramTypeName))->isInstantiable()) {
+            $default = $this->objectDefault($parameter, $paramTypeName);
+
+            // Make sure the null-default parameters get autowired for BC reasons
+            if (null !== $default) {
+                return $default;
+            }
+
             return $this->get($paramTypeName);
         }
 
@@ -401,10 +416,27 @@ class Container implements ContainerInterface, IteratorAggregate
 
         // But we should also consider default values if present and no default provider
         if ([] === $matchingTypes) {
-            return $this->resolveDefaultValue($parameter);
+            return $this->deferToDefault($parameter);
         }
 
         return $this->missing;
+    }
+
+    /**
+     * Returns the default value unless the type is registered.
+     */
+    private function objectDefault(ReflectionParameter $parameter, string $paramTypeName): ?object
+    {
+        if (!$parameter->isOptional()) {
+            return null;
+        }
+
+        if ($this->isRegistered($paramTypeName)) {
+            return null;
+        }
+
+        /** @var ?object */
+        return $parameter->getDefaultValue();
     }
 
     /**
@@ -430,6 +462,11 @@ class Container implements ContainerInterface, IteratorAggregate
             return true;
         }
 
+        return $this->isRegistered($id);
+    }
+
+    private function isRegistered(string $id): bool
+    {
         if (array_key_exists($id, $this->implementations)) {
             return true;
         }

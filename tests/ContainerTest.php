@@ -61,6 +61,8 @@ use Tests\DIContainer\Fixtures\NameProvidingContainer;
 use Tests\DIContainer\Fixtures\BuiltinDefaultDependent;
 use Tests\DIContainer\Fixtures\MissingTypeOptionalDependent;
 use Tests\DIContainer\Fixtures\NameNeederOptional;
+use Tests\DIContainer\Fixtures\NewDefaultDependent;
+use Tests\DIContainer\Fixtures\NullableDefaultDependent;
 use Tests\DIContainer\Fixtures\OptionalInterfaceDependent;
 use Tests\DIContainer\Fixtures\SimpleObject;
 use Tests\DIContainer\Fixtures\SomeAbstractObject;
@@ -167,10 +169,19 @@ class ContainerTest extends TestCase
         $this->assertSame([], $object->getInputs());
     }
 
-    public function testItSkipsTypedVariadicParameters(): void
+    public static function provideVariadicContainers(): iterable
     {
-        $container = new Container();
+        yield 'autowired' => [new Container()];
 
+        $container = new Container();
+        $container->inject(SimpleObject::class, new SimpleObject());
+
+        yield 'registered' => [$container];
+    }
+
+    #[DataProvider('provideVariadicContainers')]
+    public function testItSkipsTypedVariadicParameters(Container $container): void
+    {
         $object = $container->get(TypedVariadicConstructor::class);
 
         $this->assertInstanceOf(TypedVariadicConstructor::class, $object);
@@ -695,6 +706,66 @@ class ContainerTest extends TestCase
 
         $this->assertSame(42, $object->getId());
         $this->assertSame($injected, $object->getNamed());
+    }
+
+    public function testItAutowiresNullableClassesWithNullDefault(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(NullableDefaultDependent::class);
+
+        $this->assertSame($container->get(SimpleObject::class), $object->getObject());
+    }
+
+    public function testItUsesNewDefaultValues(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(NewDefaultDependent::class);
+
+        $this->assertSame('specificName', $object->getComplex()->getName());
+        $this->assertSame(3, $object->getComplex()->getId());
+    }
+
+    public function testItDoesNotShareNewDefaultValues(): void
+    {
+        $container = new Container();
+
+        $simple = $container->get(SimpleObject::class);
+
+        $object = $container->get(NewDefaultDependent::class);
+
+        $this->assertNotSame($simple, $object->getSimple());
+
+        $this->assertNotSame($container->get(SimpleObject::class), $object->getSimple());
+    }
+
+    public function testItUsesNullableNewDefaultValues(): void
+    {
+        $container = new Container();
+
+        $object = $container->get(NewDefaultDependent::class);
+
+        $this->assertSame('custom', $object->getNullable()?->getName());
+    }
+
+    public function testItPrefersRegistrationsOverNewDefaultValues(): void
+    {
+        $complex = new ComplexObject('container configured name', new SimpleObject());
+        $simple = new SimpleObject();
+
+        $container = new Container([
+            ComplexObject::class => static fn() => $complex,
+        ]);
+
+        $container->inject(SimpleObject::class, $simple);
+
+        $object = $container->get(NewDefaultDependent::class);
+
+        $this->assertSame($complex, $object->getComplex(), 'a registration replaces the default');
+        $this->assertSame('container configured name', $object->getComplex()->getName());
+        $this->assertSame($simple, $object->getSimple());
+        $this->assertSame($complex, $object->getNullable());
     }
 
     public function testItRemoves(): void
